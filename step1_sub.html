@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>그림 터치 문진표 - 정확히 어디인가요?</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <button id="btn-back" class="btn btn-secondary">
+      <span class="icon">◀</span> <span class="text" data-i18n="btn_prev">이전</span>
+    </button>
+    <div id="progress-bar"><div id="progress-fill" style="width: 20%;"></div><span id="progress-text">1 / 5</span></div>
+    <button id="btn-nurse-lock" class="btn-icon">🔒</button>
+  </header>
+
+  <section class="step active">
+    <h1 class="speakable"><span id="title-span" data-i18n="step_1_title">어디가 아파요?</span><button class="btn-speaker">🔊</button></h1>
+    
+    <!-- Head Position Overlay -->
+    <div id="head-pos-flow" class="hidden hurt-flow">
+      <div class="symptoms-grid single-select">
+        <button class="symptom-card" data-sub="part_head"><span class="emoji">🧑</span><span class="text" data-i18n="part_head">머리</span></button>
+        <button class="symptom-card" data-sub="part_neck"><span class="emoji">🦒</span><span class="text" data-i18n="part_neck">목</span></button>
+        <button class="symptom-card" data-sub="part_eye"><span class="emoji">👁️</span><span class="text" data-i18n="part_eye">눈</span></button>
+        <button class="symptom-card" data-sub="part_ear"><span class="emoji">👂</span><span class="text" data-i18n="part_ear">귀</span></button>
+        <button class="symptom-card" data-sub="part_nose"><span class="emoji">👃</span><span class="text" data-i18n="part_nose">코</span></button>
+        <button class="symptom-card" data-sub="part_mouth"><span class="emoji">👄</span><span class="text" data-i18n="part_mouth">입·이</span></button>
+      </div>
+    </div>
+
+    <!-- Side (Left/Right/Both) Selection Overlay -->
+    <div id="side-select-flow" class="hidden hurt-flow">
+      <div class="symptoms-grid single-select">
+        <button class="symptom-card" data-side="left"><span class="emoji">👈</span><span class="text" data-i18n="side_left">왼쪽</span></button>
+        <button class="symptom-card" data-side="right"><span class="emoji">👉</span><span class="text" data-i18n="side_right">오른쪽</span></button>
+        <button class="symptom-card" data-side="both"><span class="emoji">🙌</span><span class="text" data-i18n="side_both">양쪽 다</span></button>
+      </div>
+    </div>
+    
+    <!-- Arm Part Selection Overlay -->
+    <div id="arm-part-flow" class="hidden hurt-flow">
+      <div class="symptoms-grid single-select">
+        <button class="symptom-card" data-sub="arm_upper"><span class="emoji">🦾</span><span class="text" data-i18n="arm_upper">어깨·윗팔</span></button>
+        <button class="symptom-card" data-sub="arm_lower"><span class="emoji">🦾</span><span class="text" data-i18n="arm_lower">팔꿈치·아랫팔</span></button>
+        <button class="symptom-card" data-sub="arm_hand"><span class="emoji">🖐️</span><span class="text" data-i18n="arm_hand">손·손목</span></button>
+      </div>
+    </div>
+
+    <!-- Leg Part Selection Overlay -->
+    <div id="leg-part-flow" class="hidden hurt-flow">
+      <div class="symptoms-grid single-select">
+        <button class="symptom-card" data-sub="leg_thigh"><span class="emoji">🦵</span><span class="text" data-i18n="leg_thigh">허벅지</span></button>
+        <button class="symptom-card" data-sub="leg_knee"><span class="emoji">🦵</span><span class="text" data-i18n="leg_knee">무릎</span></button>
+        <button class="symptom-card" data-sub="leg_calf"><span class="emoji">🦵</span><span class="text" data-i18n="leg_calf">종아리·발목</span></button>
+        <button class="symptom-card" data-sub="leg_foot"><span class="emoji">🦶</span><span class="text" data-i18n="leg_foot">발</span></button>
+      </div>
+    </div>
+
+    <!-- Belly Position Overlay -->
+    <div id="belly-pos-flow" class="hidden hurt-flow">
+      <div class="symptoms-grid single-select">
+        <button class="symptom-card" data-sub="belly_top"><span class="emoji">🔼</span><span class="text" data-i18n="belly_top">윗배</span></button>
+        <button class="symptom-card" data-sub="belly_navel"><span class="emoji">⏺️</span><span class="text" data-i18n="belly_navel">배꼽 주변</span></button>
+        <button class="symptom-card" data-sub="belly_bottom"><span class="emoji">🔽</span><span class="text" data-i18n="belly_bottom">아랫배</span></button>
+        <button class="symptom-card" data-sub="belly_right_bottom"><span class="emoji">↘️</span><span class="text" data-i18n="belly_right_bottom">오른쪽 아래</span></button>
+      </div>
+    </div>
+
+    <div class="step-actions" style="justify-content: center;">
+      <button class="btn btn-secondary btn-idk" data-i18n="idk">잘 모르겠어요</button>
+    </div>
+  </section>
+
+  <script src="data.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let state = getState();
+      
+      if (!state.part) { window.location.href = 'step1.html'; return; }
+
+      function updateTitle(i18nKey) {
+        const span = document.getElementById('title-span');
+        span.setAttribute('data-i18n', i18nKey);
+        applyLanguageToUI();
+      }
+
+      const showFlow = (id) => {
+        document.querySelectorAll('.hurt-flow').forEach(el => el.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+      };
+
+      // Flow Logic
+      const lang = state.lang || 'ko';
+      const t = translations[lang] || translations.ko;
+
+      if (state.sideSelect && !state.sideSelected) {
+        // Step A: Arm/Leg Left/Right Selection
+        const titleKey = state.sideSelect === 'arm' ? 'side_select_arm' : 'side_select_leg';
+        updateTitle(titleKey);
+        showFlow('side-select-flow');
+        
+        document.querySelectorAll('[data-side]').forEach(btn => {
+          btn.onclick = (e) => {
+            const side = e.currentTarget.dataset.side;
+            state.sideLabel = translations.ko['side_' + side];
+            state.sideSelected = true;
+            saveState(state);
+            location.reload();
+          };
+        });
+      } else if (state.sideSelect === 'arm' && state.sideSelected) {
+        // Step B: Arm Part Selection
+        updateTitle('step_1_title');
+        showFlow('arm-part-flow');
+        document.querySelectorAll('#arm-part-flow [data-sub]').forEach(btn => {
+          btn.onclick = (e) => {
+            const subKey = e.currentTarget.dataset.sub;
+            const subLabel = translations.ko[subKey];
+            state.part = `팔·손 (${state.sideLabel} ${subLabel})`;
+            saveState(state);
+            window.location.href = 'step2.html';
+          };
+        });
+      } else if (state.sideSelect === 'leg' && state.sideSelected) {
+        // Step C: Leg Part Selection
+        updateTitle('step_1_title');
+        showFlow('leg-part-flow');
+        document.querySelectorAll('#leg-part-flow [data-sub]').forEach(btn => {
+          btn.onclick = (e) => {
+            const subKey = e.currentTarget.dataset.sub;
+            const subLabel = translations.ko[subKey];
+            state.part = `다리·발 (${state.sideLabel} ${subLabel})`;
+            saveState(state);
+            window.location.href = 'step2.html';
+          };
+        });
+      } else if (state.part === translations.ko['part_head'] && !state.headSubSelected) {
+        // Head Sub Selection
+        updateTitle('part_head');
+        showFlow('head-pos-flow');
+        document.querySelectorAll('#head-pos-flow [data-sub]').forEach(btn => {
+          btn.onclick = (e) => {
+            const subKey = e.currentTarget.dataset.sub;
+            state.part = translations.ko[subKey];
+            state.headSubSelected = true;
+            saveState(state);
+            window.location.href = 'step2.html';
+          };
+        });
+      } else if (state.part === translations.ko['part_belly'] && !state.bellyPos) {
+        // Belly Sub Selection
+        updateTitle('part_belly');
+        showFlow('belly-pos-flow');
+        document.querySelectorAll('#belly-pos-flow [data-sub]').forEach(btn => {
+          btn.onclick = (e) => {
+            const subKey = e.currentTarget.dataset.sub;
+            state.bellyPos = translations.ko[subKey];
+            saveState(state);
+            window.location.href = 'step2.html';
+          };
+        });
+      } else {
+        window.location.href = 'step2.html';
+      }
+
+      // I don't know button
+      document.querySelector('.btn-idk').addEventListener('click', () => {
+        if (state.part === translations.ko['part_head']) {
+          state.headSubSelected = true;
+        } else if (state.part === translations.ko['part_belly']) {
+          state.bellyPos = translations.ko['idk'];
+        } else if (state.sideSelect) {
+          if (!state.sideSelected) {
+             state.sideSelected = true;
+             state.sideLabel = translations.ko['idk'];
+             saveState(state);
+             location.reload();
+             return;
+          } else {
+             state.part = `${state.sideSelect === 'arm' ? '팔·손' : '다리·발'} (${state.sideLabel} ${translations.ko['idk']})`;
+          }
+        }
+        saveState(state);
+        window.location.href = 'step2.html';
+      });
+
+      // Back Button
+      document.getElementById('btn-back').addEventListener('click', () => {
+        if (state.sideSelect && state.sideSelected) {
+          state.sideSelected = false;
+          state.sideLabel = null;
+          saveState(state);
+          location.reload();
+        } else {
+          window.location.href = 'step1.html';
+        }
+      });
+
+      applyLanguageToUI();
+    });
+  </script>
+</body>
+</html>

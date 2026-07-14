@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>그림 터치 문진표 - 얼마나 아파요?</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .pain-scale-wrap {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .pain-label {
+      text-align: center;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--text-sub);
+    }
+    .pain-label span { font-weight: 700; color: var(--text-main); }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="btn btn-secondary" onclick="window.location.href='step2.html'">
+      <span class="icon">◀</span> <span class="text" data-i18n="btn_prev">이전</span>
+    </button>
+    <div id="progress-bar"><div id="progress-fill" style="width: 60%;"></div><span id="progress-text">3 / 5</span></div>
+    <button id="btn-nurse-lock" class="btn-icon">🔒</button>
+  </header>
+
+  <section class="step active">
+    <h1 class="speakable"><span data-i18n="step_3_title">얼마나 아파요?</span><button class="btn-speaker">🔊</button></h1>
+    <div class="pain-scale-wrap" id="pain-list-container">
+      <!-- Dynamically filled by JS -->
+    </div>
+    
+    <div class="step-actions" style="margin-top: 1rem; text-align: center;">
+      <button id="btn-next" class="btn btn-primary hidden" data-i18n="btn_next">다음</button>
+    </div>
+  </section>
+
+  <script src="data.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let state = getState();
+      if (!state.part || !state.symptoms || state.symptoms.length === 0) { window.location.href = 'step1.html'; return; }
+      
+      state.painLevels = state.painLevels || {};
+      
+      const container = document.getElementById('pain-list-container');
+      const btnNext = document.getElementById('btn-next');
+      
+      function checkCompletion() {
+        if (state.symptoms.every(s => state.painLevels[s] !== undefined)) {
+          btnNext.classList.remove('hidden');
+        } else {
+          btnNext.classList.add('hidden');
+        }
+      }
+
+      state.symptoms.forEach(symptom => {
+        const translatedSymptom = translateKoToLang(symptom, state.lang);
+        const block = document.createElement('div');
+        block.className = 'symptom-pain-block';
+        block.style.marginBottom = '2rem';
+        block.style.width = '100%';
+        block.innerHTML = `
+          <h3 style="text-align: center; color: var(--primary); margin-bottom: 1rem;">${translatedSymptom}</h3>
+          <div class="faces-container" data-symptom="${symptom}">
+            <button class="face-btn" data-pain="0"><div class="emoji">😄</div><div class="label">0</div></button>
+            <button class="face-btn" data-pain="2"><div class="emoji">🙂</div><div class="label">2</div></button>
+            <button class="face-btn" data-pain="4"><div class="emoji">😐</div><div class="label">4</div></button>
+            <button class="face-btn" data-pain="6"><div class="emoji">☹️</div><div class="label">6</div></button>
+            <button class="face-btn" data-pain="8"><div class="emoji">😣</div><div class="label">8</div></button>
+            <button class="face-btn" data-pain="10"><div class="emoji">😭</div><div class="label">10</div></button>
+          </div>
+          <div class="pain-label">
+            <span>😄 안 아파요</span> ← → <span>😭 너무 아파요</span>
+          </div>
+        `;
+        container.appendChild(block);
+        
+        // Restore state if exists
+        if (state.painLevels[symptom] !== undefined) {
+          block.querySelector(`.face-btn[data-pain="${state.painLevels[symptom]}"]`).classList.add('selected');
+        }
+      });
+      
+      checkCompletion();
+
+      document.querySelectorAll('.faces-container').forEach(fc => {
+        const symptom = fc.dataset.symptom;
+        fc.querySelectorAll('.face-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            fc.querySelectorAll('.face-btn').forEach(b => b.classList.remove('selected'));
+            e.currentTarget.classList.add('selected');
+            state.painLevels[symptom] = e.currentTarget.dataset.pain;
+            saveState(state);
+            checkCompletion();
+          });
+        });
+      });
+      
+      btnNext.addEventListener('click', () => {
+        window.location.href = 'step4.html';
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>그림 터치 문진표 - 알레르기</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <button class="btn btn-secondary" onclick="window.history.back()">
+      <span class="icon">◀</span> <span class="text" data-i18n="btn_prev">이전</span>
+    </button>
+    <div id="progress-bar"><div id="progress-fill" style="width: 90%;"></div><span id="progress-text">4.5 / 5</span></div>
+    <button id="btn-nurse-lock" class="btn-icon">🔒</button>
+  </header>
+
+  <section class="step active">
+    <!-- Allergy selection -->
+    <div id="allergy-container">
+      <h2 class="speakable" style="text-align: center;"><span data-i18n="allergy_title">알레르기가 있어요?</span><button class="btn-speaker">🔊</button></h2>
+      <div class="symptoms-grid" id="allergy-grid" style="margin-top: 2rem;">
+        <button class="symptom-card" data-allergy="allergy_none"><span class="emoji">✅</span><span class="text" data-i18n="allergy_none">없어요</span></button>
+        <button class="symptom-card" data-allergy="allergy_drug"><span class="emoji">💊</span><span class="text" data-i18n="allergy_drug">약</span></button>
+        <button class="symptom-card" data-allergy="allergy_peanut"><span class="emoji">🥜</span><span class="text" data-i18n="allergy_peanut">땅콩/견과류</span></button>
+        <button class="symptom-card" data-allergy="allergy_milk"><span class="emoji">🥛</span><span class="text" data-i18n="allergy_milk">우유</span></button>
+        <button class="symptom-card" data-allergy="allergy_egg"><span class="emoji">🥚</span><span class="text" data-i18n="allergy_egg">계란</span></button>
+        <button class="symptom-card" data-allergy="allergy_seafood"><span class="emoji">🦐</span><span class="text" data-i18n="allergy_seafood">해산물</span></button>
+        <button class="symptom-card" data-allergy="allergy_peach"><span class="emoji">🍑</span><span class="text" data-i18n="allergy_peach">복숭아</span></button>
+        <button class="symptom-card" data-allergy="allergy_wheat"><span class="emoji">🌾</span><span class="text" data-i18n="allergy_wheat">밀가루</span></button>
+      </div>
+    </div>
+    
+    <div class="step-actions" style="margin-top: 3rem;">
+      <button id="btn-next" class="btn btn-primary hidden" data-i18n="btn_next">다음</button>
+    </div>
+  </section>
+
+  <script src="data.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let state = getState();
+      
+      const btnNext = document.getElementById('btn-next');
+
+      // Allergy selection logic
+      state.allergies = state.allergies || [];
+      // Restore previously selected allergies
+      state.allergies.forEach(a => {
+        const btn = document.querySelector(`[data-allergy="${a}"]`);
+        if (btn) btn.classList.add('selected');
+      });
+
+      function checkAllergyComplete() {
+        const hasAllergy = document.querySelector('#allergy-grid .symptom-card.selected');
+        if (!hasAllergy) { 
+          btnNext.classList.add('hidden'); 
+        } else {
+          btnNext.classList.remove('hidden');
+        }
+      }
+      checkAllergyComplete();
+
+      document.querySelectorAll('#allergy-grid .symptom-card').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const key = e.currentTarget.dataset.allergy;
+          if (key === 'allergy_none') {
+            // Clicking 'none' deselects all others
+            document.querySelectorAll('#allergy-grid .symptom-card').forEach(b => b.classList.remove('selected'));
+            e.currentTarget.classList.add('selected');
+            state.allergies = ['allergy_none'];
+          } else {
+            // Deselect 'none' if selecting a specific allergy
+            const noneBtn = document.querySelector('[data-allergy="allergy_none"]');
+            if (noneBtn) noneBtn.classList.remove('selected');
+            state.allergies = state.allergies.filter(a => a !== 'allergy_none');
+            
+            if (e.currentTarget.classList.contains('selected')) {
+              e.currentTarget.classList.remove('selected');
+              state.allergies = state.allergies.filter(a => a !== key);
+            } else {
+              e.currentTarget.classList.add('selected');
+              state.allergies.push(key);
+            }
+          }
+          saveState(state);
+          checkAllergyComplete();
+        });
+      });
+
+      btnNext.addEventListener('click', () => {
+        window.location.href = 'step5.html';
+      });
+    });
+  </script>
+</body>
+</html>

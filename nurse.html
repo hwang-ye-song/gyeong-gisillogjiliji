@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>보건교사 대시보드 - 그림 터치 문진표</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      background-color: #F3F4F6;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .dashboard-header {
+      background: #FFFFFF;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    .dashboard-header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: var(--primary);
+      text-align: left;
+    }
+    .dashboard-content {
+      display: flex;
+      flex-grow: 1;
+      overflow: hidden;
+      padding: 1.5rem;
+      gap: 1.5rem;
+    }
+    .sidebar {
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      flex-shrink: 0;
+    }
+    .stat-card {
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+    .stat-card h3 {
+      color: var(--text-sub);
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+    .stat-card .value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+    .stat-card .value.emergency {
+      color: var(--emergency);
+    }
+    .main-panel {
+      flex-grow: 1;
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--secondary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .panel-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+    }
+    .records-list {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .record-card {
+      border: 1px solid var(--secondary);
+      border-left: 6px solid var(--primary);
+      border-radius: 8px;
+      padding: 1.5rem;
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      transition: box-shadow 0.2s;
+      position: relative;
+    }
+    .record-card:hover {
+      box-shadow: var(--shadow);
+    }
+    .record-card.emergency {
+      border-left-color: var(--emergency);
+      background-color: #FEF2F2;
+    }
+    .record-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .record-meta {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      background: var(--secondary);
+      color: var(--text-main);
+    }
+    .badge.emergency {
+      background: var(--emergency);
+      color: #FFFFFF;
+      margin-right: 0.5rem;
+    }
+    .entry-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+    .entry-box {
+      background: #F9FAFB;
+      border: 1px solid var(--secondary);
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.95rem;
+    }
+    .entry-box.emergency-entry {
+      background: #FFFFFF;
+      border-color: #FCA5A5;
+    }
+    .ai-summary {
+      background: #EEF2FF;
+      padding: 1rem;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--primary-hover);
+    }
+    .btn-resolve {
+      background: var(--card-bg);
+      color: var(--text-sub);
+      border: 1px solid var(--secondary);
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-resolve:hover {
+      background: var(--secondary);
+      color: var(--text-main);
+    }
+    @media (max-width: 768px) {
+      .dashboard-content {
+        flex-direction: column;
+        overflow-y: auto;
+      }
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+      }
+      .stat-card {
+        flex: 1;
+      }
+      .main-panel {
+        overflow: visible;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="dashboard-header">
+    <h1>🏥 보건교사 대시보드</h1>
+    <div>
+      <button id="btn-refresh" class="btn btn-secondary" style="min-height: auto; padding: 0.5rem 1rem; font-size: 1rem;">새로고침</button>
+      <button id="btn-exit" class="btn btn-secondary" style="min-height: auto; padding: 0.5rem 1rem; font-size: 1rem; margin-left: 0.5rem;">나가기</button>
+    </div>
+  </header>
+
+  <div class="dashboard-content">
+    <aside class="sidebar">
+      <div class="stat-card">
+        <h3>오늘 접수된 학생</h3>
+        <div class="value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card">
+        <h3>긴급 알림</h3>
+        <div class="value emergency" id="stat-emergency">0</div>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <div class="panel-header">
+        <h2>실시간 문진표 접수 목록</h2>
+        <span id="last-updated" style="color: var(--text-sub); font-size: 0.9rem;"></span>
+      </div>
+      <div class="records-list" id="records-container">
+        <div style="text-align: center; padding: 3rem; color: var(--text-sub);">
+          데이터를 불러오는 중입니다...
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="db.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('btn-exit').addEventListener('click', () => {
+        window.location.href = 'index.html';
+      });
+
+      document.getElementById('btn-refresh').addEventListener('click', () => {
+        fetchRecords();
+      });
+
+      fetchRecords();
+
+      // Realtime subscription setup
+      const channel = db.channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'surveys'
+          },
+          (payload) => {
+            console.log("New record received!", payload);
+            fetchRecords();
+          }
+        )
+        .subscribe();
+    });
+
+    async function fetchRecords() {
+      try {
+        const { data, error } = await db
+          .from('surveys')
+          .select('*')
+          .eq('is_resolved', false)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        renderRecords(data);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        document.getElementById('records-container').innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: var(--emergency);">
+            데이터를 불러오는 중 오류가 발생했습니다.<br>
+            ${err.message}
+          </div>
+        `;
+      }
+    }
+
+    async function resolveRecord(id) {
+      if (!confirm("이 문진표를 확인 완료(숨김) 처리하시겠습니까?")) return;
+      try {
+        const { error } = await db
+          .from('surveys')
+          .update({ is_resolved: true })
+          .eq('id', id);
+        if (error) throw error;
+        fetchRecords();
+      } catch (err) {
+        console.error("Update error:", err);
+        alert("처리 중 오류가 발생했습니다.");
+      }
+    }
+
+    function renderRecords(records) {
+      const container = document.getElementById('records-container');
+      document.getElementById('last-updated').innerText = `최근 업데이트: ${new Date().toLocaleTimeString()}`;
+      
+      document.getElementById('stat-total').innerText = records.length;
+      document.getElementById('stat-emergency').innerText = records.filter(r => r.emergency_flags && r.emergency_flags.length > 0).length;
+
+      if (records.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: var(--text-sub);">
+            새로 접수된 문진표가 없습니다.
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = records.map(r => {
+        const isEmergency = r.emergency_flags && r.emergency_flags.length > 0;
+        const dateStr = new Date(r.created_at).toLocaleString('ko-KR');
+        
+        let badges = '';
+        if (isEmergency) {
+          badges = r.emergency_flags.map(f => `<span class="badge emergency">🚨 ${f}</span>`).join('');
+        }
+        
+        const entriesHtml = (r.entries_json || []).map((e, idx) => {
+          let symptomDisplay = "";
+          if (e.symptoms && e.symptoms.length > 0) {
+            symptomDisplay = e.symptoms.map(s => {
+              const p = e.painLevels && e.painLevels[s] ? e.painLevels[s] : (e.painLevel || 0);
+              const t = e.startTimes && e.startTimes[s] ? e.startTimes[s] : (e.startTime || "모름");
+              return `• <strong>${s}</strong> - 통증: <span style="color:${p >= 8 ? '#DC2626' : 'inherit'}; font-weight:bold;">${p}/10</span>, 발현 시점: ${t}`;
+            }).join('<br>');
+          }
+          
+          return `
+          <div class="entry-box ${isEmergency ? 'emergency-entry' : ''}">
+            <strong>[증상 ${idx+1}] ${e.part} ${e.bellyPos ? `(${e.bellyPos})` : ''}</strong><br>
+            <div style="margin-top: 0.5rem; color: #4B5563;">
+              ${symptomDisplay}<br>
+              ${e.followups.map(f => `• ${f.q} <strong>${f.a}</strong><br>`).join('')}
+            </div>
+          </div>
+        `}).join('');
+
+        let allergyHtml = "";
+        const allergies = r.entries_json && r.entries_json[0] && r.entries_json[0].allergies;
+        if (allergies && allergies.length > 0 && !allergies.includes('allergy_none')) {
+          const allergyMap = { "allergy_drug": "약", "allergy_peanut": "땅콩/견과류", "allergy_milk": "우유", "allergy_egg": "계란", "allergy_seafood": "해산물", "allergy_peach": "복숭아", "allergy_wheat": "밀가루" };
+          const allergyLabels = allergies.map(a => allergyMap[a] || a).join(', ');
+          allergyHtml = `
+            <div style="margin-top: 1rem; padding: 0.75rem; background-color: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 0.5rem;">
+              <strong style="color: #DC2626;">🏥 알레르기 주의:</strong> <span style="color: #991B1B; font-weight: 600;">${allergyLabels}</span>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="record-card ${isEmergency ? 'emergency' : ''}">
+            <div class="record-header">
+              <div>
+                ${badges}
+                <div class="record-meta">${dateStr} | 작성 언어: ${r.lang}</div>
+              </div>
+              <button class="btn-resolve" onclick="resolveRecord('${r.id}')">확인 완료</button>
+            </div>
+            
+            <div class="ai-summary">
+              <strong>🤖 AI 요약:</strong> ${r.ai_summary ? r.ai_summary.replace(/\n/g, '<br>') : '요약 정보 없음'}
+            </div>
+            
+            <div class="record-body" style="margin-top: 1rem;">
+              <div class="entry-grid">
+                ${entriesHtml}
+              </div>
+              ${allergyHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>

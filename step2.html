@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>그림 터치 문진표 - 어떻게 아파요?</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <button id="btn-back" class="btn btn-secondary">
+      <span class="icon">◀</span> <span class="text" data-i18n="btn_prev">이전</span>
+    </button>
+    <div id="progress-bar"><div id="progress-fill" style="width: 40%;"></div><span id="progress-text">2 / 5</span></div>
+    <button id="btn-nurse-lock" class="btn-icon">🔒</button>
+  </header>
+
+  <section class="step active">
+    <h1 class="speakable"><span id="title-span" data-i18n="step_2_title">어떻게 아파요?</span><button class="btn-speaker">🔊</button></h1>
+    
+    <!-- Special Hurt Flow Containers -->
+    <div id="hurt-flow-1" class="hidden hurt-flow">
+      <div class="symptoms-grid single-select">
+        <button class="symptom-card" data-hurt="hurt_1"><span class="emoji">🤸</span><span class="text" data-i18n="hurt_1">넘어짐</span></button>
+        <button class="symptom-card" data-hurt="hurt_2"><span class="emoji">💥</span><span class="text" data-i18n="hurt_2">부딪힘</span></button>
+        <button class="symptom-card" data-hurt="hurt_3"><span class="emoji">🔪</span><span class="text" data-i18n="hurt_3">베임</span></button>
+        <button class="symptom-card" data-hurt="hurt_4"><span class="emoji">🦶</span><span class="text" data-i18n="hurt_4">접질림</span></button>
+      </div>
+    </div>
+    
+    <div id="hurt-flow-2" class="hidden hurt-flow">
+      <div class="symptoms-grid single-select">
+        <button class="symptom-card" data-state="state_1"><span class="emoji">🩸</span><span class="text" data-i18n="state_1">피가 나요</span></button>
+        <button class="symptom-card" data-state="state_2"><span class="emoji">🎈</span><span class="text" data-i18n="state_2">부었어요</span></button>
+        <button class="symptom-card" data-state="state_3"><span class="emoji">🫐</span><span class="text" data-i18n="state_3">멍들었어요</span></button>
+        <button class="symptom-card" data-state="state_4"><span class="emoji">⚡</span><span class="text" data-i18n="state_4">움직이면 아파요</span></button>
+      </div>
+    </div>
+
+    <div id="head-q-flow" class="hidden hurt-flow">
+      <div class="symptoms-grid single-select">
+        <button class="symptom-card" data-headq="yes"><span class="emoji">⭕</span><span class="text" data-i18n="yes">네</span></button>
+        <button class="symptom-card" data-headq="no"><span class="emoji">❌</span><span class="text" data-i18n="no">아니요</span></button>
+      </div>
+    </div>
+
+    <!-- Normal Symptoms Grid -->
+    <div id="symptoms-container" class="symptoms-grid hidden"></div>
+
+    <div class="step-actions">
+      <button class="btn btn-secondary btn-idk" data-i18n="idk">잘 모르겠어요</button>
+      <button id="btn-next" class="btn btn-primary" data-i18n="btn_next">다음</button>
+    </div>
+  </section>
+
+  <script src="data.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let state = getState();
+      
+      // Ensure defaults if missing from storage
+      state.symptoms = state.symptoms || [];
+      
+      // If no part selected, go back
+      if (!state.part) { window.location.href = 'step1.html'; return; }
+
+      // Reset symptoms if going back to this page
+      if (state.part !== '다쳤어요') {
+          state.symptoms = state.symptoms.filter(s => !s.startsWith('다침:'));
+      }
+
+      function updateTitle(i18nKey) {
+        const span = document.getElementById('title-span');
+        span.setAttribute('data-i18n', i18nKey);
+        applyLanguageToUI();
+      }
+
+      const showFlow = (id) => {
+        document.querySelectorAll('.hurt-flow, #symptoms-container').forEach(el => el.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+      };
+
+      // 1. Hurt Flow
+      if (state.part === '다쳤어요' && !state.hurtMethod) {
+        updateTitle('hurt_how');
+        showFlow('hurt-flow-1');
+        document.querySelectorAll('[data-hurt]').forEach(btn => {
+          btn.onclick = (e) => {
+            state.hurtMethod = translations.ko[e.currentTarget.dataset.hurt];
+            saveState(state);
+            // Ask State
+            updateTitle('hurt_state');
+            showFlow('hurt-flow-2');
+          };
+        });
+        
+        document.querySelectorAll('[data-state]').forEach(btn => {
+          btn.onclick = (e) => {
+            state.hurtState = translations.ko[e.currentTarget.dataset.state];
+            saveState(state);
+            state.symptoms = [`다침: ${state.hurtMethod}, ${state.hurtState}`];
+            saveState(state);
+            window.location.href = 'step3.html';
+          };
+        });
+      }
+      // 2. Normal Symptoms Flow
+      else {
+        renderSymptoms();
+      }
+
+      function renderSymptoms() {
+        updateTitle('step_2_title');
+        showFlow('symptoms-container');
+        const container = document.getElementById('symptoms-container');
+        container.innerHTML = '';
+        
+        // Extract sub-part first, then fall back to base part
+        // e.g. "팔·손 (왼쪽 어깨·윗팔)" → try "어깨·윗팔" first, then "팔·손"
+        let lookupPart = state.part;
+        if (state.part.includes(' (')) {
+            const base = state.part.split(' (')[0];
+            const detail = state.part.split(' (')[1].replace(')', '');
+            // detail is like "왼쪽 어깨·윗팔" or "양쪽 다 손·손목"
+            // Extract the last part after side label
+            const subParts = ['어깨·윗팔', '팔꿈치·아랫팔', '손·손목', '허벅지', '무릎', '종아리·발목', '발'];
+            const found = subParts.find(sp => detail.includes(sp));
+            lookupPart = found && symptomsData[found] ? found : base;
+        }
+        
+        let symptomsList = symptomsData[lookupPart] || [];
+        symptomsList.forEach(s => {
+          const btn = document.createElement('button');
+          btn.className = 'symptom-card multi-select ' + (state.symptoms.includes(s.ko) ? 'selected' : '');
+          btn.innerHTML = `<span class="emoji">${s.icon}</span><span class="text">${s[state.lang] || s.ko}</span>`;
+          btn.onclick = () => {
+            if (state.symptoms.includes(s.ko)) {
+              state.symptoms = state.symptoms.filter(sym => sym !== s.ko);
+              btn.classList.remove('selected');
+            } else {
+              state.symptoms.push(s.ko);
+              btn.classList.add('selected');
+            }
+            saveState(state);
+            document.getElementById('btn-next').disabled = state.symptoms.length === 0;
+          };
+          container.appendChild(btn);
+        });
+
+        document.getElementById('btn-next').disabled = state.symptoms.length === 0;
+        document.getElementById('btn-next').onclick = () => {
+          if (state.part === '머리' && state.symptoms.some(s => s === '머리를 다쳤어요' || s === '부딪혔어요')) {
+            updateTitle('head_q');
+            showFlow('head-q-flow');
+          } else {
+            window.location.href = 'step3.html';
+          }
+        };
+
+        // Head Q Flow
+        document.querySelectorAll('[data-headq]').forEach(btn => {
+          btn.onclick = (e) => {
+            state.headQ = e.currentTarget.dataset.headq === 'yes' ? true : false;
+            saveState(state);
+            window.location.href = 'step3.html';
+          };
+        });
+      }
+
+      // I don't know button
+      document.querySelector('.btn-idk').addEventListener('click', () => {
+        state.symptoms.push(translations.ko['idk']);
+        saveState(state);
+        window.location.href = 'step3.html';
+      });
+
+      // Back Button
+      document.getElementById('btn-back').addEventListener('click', () => {
+        if (state.part === '다쳤어요') {
+          if (state.hurtMethod && !state.hurtState) {
+            state.hurtMethod = null;
+            saveState(state);
+            location.reload();
+          } else {
+            window.location.href = 'step1.html';
+          }
+        } else if (!document.getElementById('head-q-flow').classList.contains('hidden')) {
+          showFlow('symptoms-container');
+          updateTitle('step_2_title');
+        } else {
+          // Check if we came from step1_sub (i.e. we have sub-divisions)
+          if (state.sideSelect || state.headSubSelected || state.bellyPos || state.part === '가슴' || state.part === '등') {
+              if (state.headSubSelected) {
+                  state.headSubSelected = false;
+                  state.part = '머리';
+              }
+              if (state.bellyPos || state.part === '가슴' || state.part === '등') {
+                  state.bellyPos = null;
+                  state.part = '몸통';
+              }
+              saveState(state);
+              window.location.href = 'step1_sub.html';
+          } else {
+              window.location.href = 'step1.html';
+          }
+        }
+      });
+
+      applyLanguageToUI();
+    });
+  </script>
+</body>
+</html>

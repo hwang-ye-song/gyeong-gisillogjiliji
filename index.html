@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>그림 터치 문진표 - 언어 선택</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .welcome-wrap {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+    }
+    .welcome-icon {
+      font-size: 4rem;
+      line-height: 1;
+    }
+    .welcome-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .lang-grid {
+      width: 100%;
+      max-width: 400px;
+    }
+  </style>
+</head>
+<body>
+  <section class="step active">
+    <div class="welcome-wrap">
+      <div class="welcome-icon">🏥</div>
+      <h1 class="welcome-title" data-i18n="step_0_title">언어를 선택하세요</h1>
+      <div class="lang-grid">
+        <button class="lang-btn" data-lang="ko"><span class="emoji">🇰🇷</span><span class="text">한국어</span></button>
+        <button class="lang-btn" data-lang="zh"><span class="emoji">🇨🇳</span><span class="text">中文</span><span class="sub-text">한국어</span></button>
+        <button class="lang-btn" data-lang="ru"><span class="emoji">🇷🇺</span><span class="text">Русский</span><span class="sub-text">한국어</span></button>
+        <button class="lang-btn" data-lang="vi"><span class="emoji">🇻🇳</span><span class="text">Tiếng Việt</span><span class="sub-text">한국어</span></button>
+        <button class="lang-btn" data-lang="en"><span class="emoji">🇺🇸</span><span class="text">English</span><span class="sub-text">한국어</span></button>
+      </div>
+    </div>
+    <button id="btn-nurse-lock" class="btn-icon nurse-lock-corner">🔒</button>
+  </section>
+
+  <script src="data.js"></script>
+  <script src="db.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      clearState();
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          let state = getState();
+          state.lang = e.currentTarget.dataset.lang;
+          saveState(state);
+          window.location.href = 'step1.html';
+        });
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,448 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&display=swap');
+
+:root {
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --primary-light: #EEF2FF;
+  --secondary: #E5E7EB;
+  --secondary-hover: #D1D5DB;
+  --text-main: #1F2937;
+  --text-sub: #6B7280;
+  --bg-color: #F3F4F6;
+  --card-bg: #FFFFFF;
+  --emergency: #EF4444;
+  --radius: 12px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Noto Sans KR', -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  line-height: 1.5;
+  height: 100vh;
+  height: 100dvh; /* 모바일 주소창 고려 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ─── Progress Bar (최상단 얇은 선) ─── */
+#progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--secondary);
+  z-index: 50;
+}
+
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #818CF8, var(--primary));
+  width: 20%;
+  transition: width 0.4s ease;
+}
+
+#progress-text {
+  display: none;
+}
+
+/* ─── Header (뒤로가기 + 자물쇠) ─── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  margin-top: 4px; /* progress bar 여백 */
+  background: transparent;
+  flex-shrink: 0;
+}
+
+header .btn {
+  min-height: unset;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.35rem;
+  opacity: 0.5;
+}
+
+.nurse-lock-corner {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.6rem 1.25rem;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow);
+  white-space: nowrap;
+  gap: 0.4rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366F1, var(--primary));
+  color: white;
+}
+
+.btn-primary:active {
+  background: var(--primary-hover);
+  transform: scale(0.97);
+}
+
+.btn-secondary {
+  background-color: var(--card-bg);
+  color: var(--text-main);
+  border: 1.5px solid var(--secondary);
+}
+
+.btn-secondary:active {
+  background-color: var(--secondary);
+}
+
+.btn-large {
+  width: 100%;
+  font-size: 1.15rem;
+  padding: 1rem;
+  margin-top: 0.75rem;
+}
+
+/* ─── Typography ─── */
+h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0.25rem 0 0.75rem 0;
+  color: var(--text-main);
+}
+
+h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0.75rem 0 0.5rem;
+  color: var(--text-main);
+}
+
+.speakable {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.btn-speaker {
+  background: var(--secondary);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s;
+  flex-shrink: 0;
+}
+
+.btn-speaker:active {
+  transform: scale(0.9);
+}
+
+/* ─── Steps (본문 영역) ─── */
+.step {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1rem 0.75rem 1rem;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+  overflow-y: auto;
+  animation: fadeIn 0.25s ease;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Language Grid (index.html) ─── */
+.lang-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.lang-btn {
+  display: flex;
+  align-items: center;
+  background: var(--card-bg);
+  border: 1.5px solid var(--secondary);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.lang-btn:active {
+  transform: scale(0.98);
+  border-color: var(--primary);
+}
+
+.lang-btn .emoji { font-size: 1.5rem; margin-right: 0.75rem; }
+.lang-btn .sub-text { margin-left: auto; color: var(--text-sub); font-size: 0.85rem; }
+
+/* ─── Symptom / Selection Grid ─── */
+.quick-grid, .body-grid, .symptoms-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.65rem;
+}
+
+@media (min-width: 768px) {
+  .quick-grid, .body-grid, .symptoms-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.quick-btn, .part-btn, .symptom-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  border: 1.5px solid var(--secondary);
+  border-radius: var(--radius);
+  padding: 1rem 0.5rem;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-height: 100px;
+}
+
+.quick-btn:active, .part-btn:active, .symptom-card:active {
+  transform: scale(0.96);
+}
+
+.quick-btn .emoji, .part-btn .emoji, .symptom-card .emoji {
+  font-size: 2.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.quick-btn .text, .part-btn .text, .symptom-card .text {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  word-break: keep-all;
+  line-height: 1.3;
+}
+
+.symptom-card.selected, .quick-btn.selected, .part-btn.selected {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+  box-shadow: 0 0 0 2px var(--primary), var(--shadow);
+}
+
+.ko-text {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  margin-top: 0.15rem;
+}
+
+.divider {
+  text-align: center;
+  margin: 1.5rem 0;
+  color: var(--text-sub);
+  font-weight: bold;
+  position: relative;
+}
+
+.divider::before, .divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: var(--secondary);
+}
+
+.divider::before { left: 0; }
+.divider::after { right: 0; }
+
+/* ─── Faces (통증 척도) ─── */
+.faces-container {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.face-btn {
+  flex: 0 0 auto;
+  background: var(--card-bg);
+  border: 1.5px solid var(--secondary);
+  border-radius: 50%;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.face-btn:active {
+  transform: scale(0.94);
+}
+
+.face-btn .emoji { font-size: 2rem; }
+.face-btn .label { font-size: 0.85rem; font-weight: 700; margin-top: 0.15rem; }
+
+.face-btn.selected {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+/* ─── Actions (하단 버튼 영역) ─── */
+.step-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: auto; /* 하단에 고정 */
+  padding-top: 0.75rem;
+  justify-content: flex-end;
+}
+
+.btn-pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(99, 102, 241, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+/* ─── Summary Card ─── */
+.summary-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  font-size: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+}
+
+/* ─── Nurse Mode ─── */
+.nurse-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.record-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
+  box-shadow: var(--shadow);
+  border-left: 6px solid var(--secondary);
+  position: relative;
+}
+
+.record-card.emergency {
+  border-left-color: var(--emergency);
+  border: 2px solid var(--emergency);
+}
+
+.badge-emergency {
+  background: var(--emergency);
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
+  display: inline-block;
+}
+
+.record-time { color: var(--text-sub); font-size: 0.8rem; margin-bottom: 0.4rem; }
+.record-summary { font-size: 0.95rem; margin-top: 0.75rem; padding: 0.75rem; background: var(--primary-light); border-radius: 8px; line-height: 1.6; }
+.btn-delete { position: absolute; top: 0.75rem; right: 0.75rem; background: #FEE2E2; color: #DC2626; border: none; padding: 0.35rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+
+/* ─── Responsive: Tablet landscape ─── */
+@media (min-width: 1024px) {
+  .step { max-width: 640px; }
+  .symptoms-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ─── Responsive: Mobile (< 768px) ─── */
+@media (max-width: 768px) {
+  h1 { font-size: 1.3rem; }
+  h2 { font-size: 1.1rem; }
+
+  .face-btn {
+    width: 64px;
+    height: 64px;
+  }
+  .face-btn .emoji { font-size: 1.75rem; }
+  .face-btn .label { font-size: 0.75rem; }
+}
+
+/* ─── Responsive: Small Mobile (< 400px) ─── */
+@media (max-width: 400px) {
+  header .btn { font-size: 0.8rem; padding: 0.3rem 0.6rem; }
+  h1 { font-size: 1.15rem; }
+  .quick-btn .emoji, .part-btn .emoji, .symptom-card .emoji { font-size: 1.75rem; }
+  .quick-btn .text, .part-btn .text, .symptom-card .text { font-size: 0.85rem; }
+  .quick-btn, .part-btn, .symptom-card { min-height: 80px; padding: 0.75rem 0.4rem; }
+  .face-btn { width: 56px; height: 56px; }
+  .face-btn .emoji { font-size: 1.5rem; }
+}

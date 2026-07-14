@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>내 정보 입력</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .profile-container {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+      gap: 1.5rem;
+    }
+    .profile-form {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1.5px solid var(--secondary);
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .form-group label {
+      font-weight: bold;
+      color: var(--text-main);
+      font-size: 1.1rem;
+    }
+    .form-group input {
+      padding: 0.75rem;
+      border: 2px solid var(--secondary);
+      border-radius: var(--radius);
+      font-size: 1.1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus {
+      border-color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="btn btn-secondary" onclick="window.location.href='index.html'">
+      <span class="icon">◀</span> <span class="text" data-i18n="btn_prev">이전</span>
+    </button>
+    <div id="progress-bar"><div id="progress-fill" style="width: 5%;"></div><span id="progress-text"></span></div>
+    <button id="btn-nurse-lock" class="btn-icon">🔒</button>
+  </header>
+
+  <section class="step active">
+    <div class="profile-container">
+      <h1 class="speakable"><span data-i18n="profile_title">내 정보 입력</span><button class="btn-speaker">🔊</button></h1>
+      <div class="profile-form">
+        <div class="form-group">
+          <label data-i18n="profile_grade">학년</label>
+          <input type="number" id="input-grade" min="1" max="6" data-i18n-placeholder="profile_placeholder">
+        </div>
+        <div class="form-group">
+          <label data-i18n="profile_class">반</label>
+          <input type="number" id="input-class" min="1" max="20" data-i18n-placeholder="profile_placeholder">
+        </div>
+        <div class="form-group">
+          <label data-i18n="profile_number">번호</label>
+          <input type="number" id="input-number" min="1" max="100" data-i18n-placeholder="profile_placeholder">
+        </div>
+        <div class="form-group">
+          <label data-i18n="profile_name">이름</label>
+          <input type="text" id="input-name" data-i18n-placeholder="profile_placeholder">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="bottom-nav">
+    <button class="btn btn-primary btn-large" id="btn-next">
+      <span class="text" data-i18n="profile_next">다음으로</span> <span class="icon">▶</span>
+    </button>
+  </nav>
+
+  <script src="data.js"></script>
+  <script src="db.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Placeholder localization
+      const state = getState();
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+          const key = el.getAttribute('data-i18n-placeholder');
+          if (translations[state.lang] && translations[state.lang][key]) {
+              el.setAttribute('placeholder', translations[state.lang][key]);
+          }
+      });
+
+      // Restore values if previously entered
+      if (state.grade) document.getElementById('input-grade').value = state.grade;
+      if (state.class_num) document.getElementById('input-class').value = state.class_num;
+      if (state.student_num) document.getElementById('input-number').value = state.student_num;
+      if (state.name) document.getElementById('input-name').value = state.name;
+
+      document.getElementById('btn-next').addEventListener('click', () => {
+        let state = getState();
+        state.grade = document.getElementById('input-grade').value;
+        state.class_num = document.getElementById('input-class').value;
+        state.student_num = document.getElementById('input-number').value;
+        state.name = document.getElementById('input-name').value;
+        
+        saveState(state);
+        window.location.href = 'step1.html';
+      });
+    });
+  </script>
+</body>
+</html>

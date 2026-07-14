@@ -17,6 +17,7 @@
 
   <section class="step active">
     <h1 class="speakable"><span id="title-span" data-i18n="step_2_title">어떻게 아파요?</span><button class="btn-speaker">🔊</button></h1>
+    <div id="selected-part-display" style="text-align: center; color: var(--primary); font-weight: bold; margin-bottom: 1.5rem; font-size: 1.1rem; background: rgba(99,102,241,0.1); padding: 0.5rem 1rem; border-radius: 8px; width: fit-content; margin-left: auto; margin-right: auto;"></div>
     
     <!-- Special Hurt Flow Containers -->
     <div id="hurt-flow-1" class="hidden hurt-flow">
@@ -111,6 +112,13 @@
 
       function renderSymptoms() {
         updateTitle('step_2_title');
+        
+        const partDisplay = document.getElementById('selected-part-display');
+        let displayStr = state.part;
+        if (state.sideSelect) displayStr += ` (${state.sideSelect})`;
+        if (state.bellyPos) displayStr = state.bellyPos;
+        partDisplay.innerText = `📍 선택한 부위: ${displayStr}`;
+        
         showFlow('symptoms-container');
         const container = document.getElementById('symptoms-container');
         container.innerHTML = '';

@@ -58,15 +58,44 @@
       </div>
     </div>
 
+    
     <!-- Belly Position Overlay -->
-    <div id="belly-pos-flow" class="hidden hurt-flow">
-      <div class="symptoms-grid single-select">
-        <button class="symptom-card" data-sub="belly_top"><span class="emoji">🔼</span><span class="text" data-i18n="belly_top">윗배</span></button>
-        <button class="symptom-card" data-sub="belly_navel"><span class="emoji">⏺️</span><span class="text" data-i18n="belly_navel">배꼽 주변</span></button>
-        <button class="symptom-card" data-sub="belly_bottom"><span class="emoji">🔽</span><span class="text" data-i18n="belly_bottom">아랫배</span></button>
-        <button class="symptom-card" data-sub="belly_right_bottom"><span class="emoji">↘️</span><span class="text" data-i18n="belly_right_bottom">오른쪽 아래</span></button>
+    <div id="belly-pos-flow" class="hidden hurt-flow" style="position: relative; width: 100%; max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
+      <!-- Labels -->
+      <div class="belly-label label-left">
+        <span class="label-text">왼쪽</span><br><span class="label-icon">🖐️</span>
+      </div>
+      <div class="belly-label label-right">
+        <span class="label-text">오른쪽</span><br><span class="label-icon">🤚</span>
+      </div>
+      
+      <!-- Container -->
+      <div id="belly-container" style="position: relative; width: 100%; aspect-ratio: 1472/1496; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); background: #fff;">
+        <img src="qhrqn.png" alt="Belly" style="width: 100%; height: 100%; display: block; pointer-events: none; user-select: none;" draggable="false" />
+        
+        <svg id="belly-svg" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+          <style>
+            .belly-area { fill: transparent; stroke: rgba(156, 163, 175, 0.8); stroke-width: 0.5; stroke-dasharray: 1, 1; transition: fill 0.2s, stroke 0.2s; pointer-events: all; }
+            .belly-area.highlight { fill: rgba(255, 107, 107, 0.5); stroke: rgba(255, 107, 107, 1); stroke-width: 1.5; stroke-dasharray: none; }
+            .belly-area.highlight-danger { fill: rgba(239, 68, 68, 0.5); stroke: var(--emergency); stroke-width: 1.5; stroke-dasharray: none; }
+          </style>
+          <path d="M0.0 0.0 L0.0 50.0 L50.0 50.0 L50.0 0.0 Z" class="belly-area" data-sub="belly_left_top" />
+          <path d="M50.0 0.0 L50.0 50.0 L100.0 50.0 L100.0 0.0 Z" class="belly-area" data-sub="belly_right_top" />
+          <path d="M0.0 50.0 L0.0 100.0 L50.0 100.0 L50.0 50.0 Z" class="belly-area" data-sub="belly_left_bottom" />
+          <path d="M50.0 50.0 L50.0 100.0 L100.0 100.0 L100.0 50.0 Z" class="belly-area" data-sub="belly_right_bottom" />
+        </svg>
+
+        <canvas id="belly-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none;"></canvas>
+      </div>
+      
+            <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+        <button id="btn-draw-mode" class="btn btn-primary">그리기 🖍️</button>
+        <button id="btn-erase-mode" class="btn btn-secondary">지우개 🧼</button>
+        <button id="btn-clear-all" class="btn btn-secondary">전체 지우기 🗑️</button>
+        <button id="btn-belly-done" class="btn btn-primary" style="display: none; width: 100%;">확인 ✔️</button>
       </div>
     </div>
+
 
     <div class="step-actions" style="justify-content: center;">
       <button class="btn btn-secondary btn-idk" data-i18n="idk">잘 모르겠어요</button>
@@ -150,17 +179,168 @@
           };
         });
       } else if (state.part === translations.ko['part_belly'] && !state.bellyPos) {
-        // Belly Sub Selection
+        // Belly Canvas Logic
         updateTitle('part_belly');
         showFlow('belly-pos-flow');
-        document.querySelectorAll('#belly-pos-flow [data-sub]').forEach(btn => {
-          btn.onclick = (e) => {
-            const subKey = e.currentTarget.dataset.sub;
-            state.bellyPos = translations.ko[subKey];
+        
+        const canvas = document.getElementById('belly-canvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        let debounceTimer = null;
+        let currentMode = 'draw';
+        
+        const resize = () => {
+          canvas.width = canvas.offsetWidth;
+          canvas.height = canvas.offsetHeight;
+        };
+        window.addEventListener('resize', resize);
+        resize();
+
+        const getPos = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+          return { x: clientX - rect.left, y: clientY - rect.top, cx: clientX, cy: clientY };
+        };
+
+        const startDraw = (e) => {
+          e.preventDefault();
+          drawing = true;
+          const pos = getPos(e);
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y);
+          clearTimeout(debounceTimer);
+          // 이전 영역 해제하지 않음 (새로 그린다고 지워지지 않게 유지)
+          // 단, 현재 모드가 'erase'이면 클릭한 영역의 하이라이트도 지울 수 있도록 나중에 처리할 수 있지만, 우선은 캔버스만 지우게 둠
+        };
+
+        const draw = (e) => {
+          if (!drawing) return;
+          e.preventDefault();
+          const pos = getPos(e);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.globalCompositeOperation = currentMode === 'erase' ? 'destination-out' : 'source-over';
+          ctx.strokeStyle = currentMode === 'erase' ? 'rgba(0,0,0,1)' : 'rgba(255, 107, 107, 0.8)'; 
+          ctx.lineWidth = currentMode === 'erase' ? 40 : 20;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.stroke();
+        };
+
+        const evaluateCanvas = () => {
+          canvas.style.pointerEvents = 'none'; // Temporarily disable to hit SVG
+          const rect = canvas.getBoundingClientRect();
+          
+          let hitCounts = {};
+          let totalHits = 0;
+          
+          try {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            // Sample every 10x10 pixels to avoid lag
+            for (let y = 0; y < canvas.height; y += 10) {
+              for (let x = 0; x < canvas.width; x += 10) {
+                const idx = (y * canvas.width + x) * 4;
+                if (data[idx + 3] > 0) { // Painted pixel
+                  const el = document.elementFromPoint(rect.left + x, rect.top + y);
+                  if (el && el.classList.contains('belly-area')) {
+                    const sub = el.getAttribute('data-sub');
+                    hitCounts[sub] = (hitCounts[sub] || 0) + 1;
+                    totalHits++;
+                  }
+                }
+              }
+            }
+          } catch(e) {
+             console.error("Canvas read error:", e);
+          }
+          
+          canvas.style.pointerEvents = 'auto'; // Re-enable
+          
+          if (totalHits > 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // 그림 지우기
+            let primaryRegion = null;
+            for (const [sub, count] of Object.entries(hitCounts)) {
+              if (count / totalHits >= 0.6) { // 60% 이상의 지분을 차지하면 해당 구역으로 판정
+                primaryRegion = sub;
+                break;
+              }
+            }
+            
+            if (primaryRegion) {
+              const svgEl = document.querySelector(`.belly-area[data-sub="${primaryRegion}"]`);
+              if (primaryRegion === 'belly_right_bottom') {
+                svgEl.classList.add('highlight-danger');
+                state.bellyPos = '우하복부 통증(맹장 의심)';
+              } else {
+                svgEl.classList.add('highlight');
+                const tMap = {
+                  belly_top: '윗배',
+                  belly_flank: '옆구리',
+                  belly_navel: '배꼽 주변',
+                  belly_left_bottom: '왼쪽 아래',
+                  belly_right_bottom: '오른쪽 아래'
+                };
+                state.bellyPos = tMap[primaryRegion] || primaryRegion;
+              }
+            } else {
+              // 60% 이상인 특정 부위가 없으면 '일반 복통'으로 묶음
+              for (const [sub, count] of Object.entries(hitCounts)) {
+                if (count > totalHits * 0.1) { 
+                  document.querySelector(`.belly-area[data-sub="${sub}"]`).classList.add('highlight');
+                }
+              }
+              state.bellyPos = '일반 복통 (넓은 부위)';
+            }
+            
+            document.getElementById('btn-belly-done').style.display = 'block';
+          } else {
+            state.bellyPos = null;
+          }
+        };
+
+        const stopDraw = () => {
+          if (!drawing) return;
+          drawing = false;
+          debounceTimer = setTimeout(evaluateCanvas, 500);
+        };
+
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', draw);
+        window.addEventListener('mouseup', stopDraw);
+        
+        canvas.addEventListener('touchstart', startDraw, {passive: false});
+        canvas.addEventListener('touchmove', draw, {passive: false});
+        window.addEventListener('touchend', stopDraw);
+        
+        document.getElementById('btn-draw-mode').onclick = () => {
+          currentMode = 'draw';
+          document.getElementById('btn-draw-mode').className = 'btn btn-primary';
+          document.getElementById('btn-erase-mode').className = 'btn btn-secondary';
+        };
+        
+        document.getElementById('btn-erase-mode').onclick = () => {
+          currentMode = 'erase';
+          document.getElementById('btn-erase-mode').className = 'btn btn-primary';
+          document.getElementById('btn-draw-mode').className = 'btn btn-secondary';
+        };
+        
+        document.getElementById('btn-clear-all').onclick = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          document.querySelectorAll('.belly-area').forEach(el => {
+            el.classList.remove('highlight', 'highlight-danger');
+          });
+          document.getElementById('btn-belly-done').style.display = 'none';
+          state.bellyPos = null;
+        };
+        
+        document.getElementById('btn-belly-done').onclick = () => {
+          if (state.bellyPos) {
             saveState(state);
             window.location.href = 'step2.html';
-          };
-        });
+          }
+        };
       } else {
         window.location.href = 'step2.html';
       }

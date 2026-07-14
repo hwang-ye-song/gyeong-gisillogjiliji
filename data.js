@@ -2,6 +2,16 @@
 
 const translations = {
     ko: {
+        belly_all: "복부 전체",
+        belly_top_all: "윗배 전체",
+        belly_bottom_all: "아랫배 전체",
+        belly_left_top: "왼쪽 윗배",
+        belly_right_top: "오른쪽 윗배",
+        belly_left_bottom: "왼쪽 아랫배",
+        belly_right_bottom: "오른쪽 아랫배",
+        pain_1: "통증 1",
+        pain_2: "통증 2",
+
       lang_name: "한국어", step_0_title: "언어를 선택하세요.", step_1_title: "어디가 아파요?", step_2_title: "어떻게 아파요?", step_3_title: "얼마나 아파요?", step_4_title: "언제부터 아파요?", step_5_title: "이대로 보낼까요?",
       btn_prev: "이전", btn_next: "다음", btn_submit: "맞아요 (보내기)", btn_restart: "다른 곳도 아파요",
       quick_1: "다쳤어요", quick_2: "배가 아파요", quick_3: "머리가 아파요", quick_4: "열이 나요", quick_5: "코피가 나요", quick_6: "토할 것 같아요",
@@ -23,9 +33,19 @@ const translations = {
       nurse_mode: "보건교사 모드", pin_prompt: "비밀번호를 입력하세요:", no_records: "접수된 문진표가 없습니다.", delete: "삭제", summary_title: "AI 요약 내용", error_api: "요약 생성 중 오류가 발생했습니다.",
       summary_symptom: "증상", summary_part: "부위", summary_symptom_label: "증상", summary_pain: "통증 정도", summary_time: "시작 시간", summary_allergy_info: "🏥 알레르기 정보", summary_allergy_label: "알레르기",
       pain_min: "안 아파요", pain_max: "너무 아파요", btn_start_over: "새로 작성하기",
-      popup_success: "전달 완료!", popup_desc: "선생님께 전달되었습니다.", belly_chest: "가슴"
+      popup_success: "전달 완료!", popup_desc: "선생님께 전달되었습니다.", belly_chest: "가슴", profile_title: "내 정보 입력", profile_grade: "학년", profile_class: "반", profile_number: "번호", profile_name: "이름", profile_placeholder: "입력", profile_next: "다음으로"
     },
     en: {
+        belly_all: "Entire belly",
+        belly_top_all: "Entire upper belly",
+        belly_bottom_all: "Entire lower belly",
+        belly_left_top: "Upper left belly",
+        belly_right_top: "Upper right belly",
+        belly_left_bottom: "Lower left belly",
+        belly_right_bottom: "Lower right belly",
+        pain_1: "Pain 1",
+        pain_2: "Pain 2",
+
         lang_name: "English", step_0_title: "Choose your language.", step_1_title: "Where does it hurt?", step_2_title: "How does it hurt?", step_3_title: "How much does it hurt?", step_4_title: "When did it start?", step_5_title: "Is this correct?",
         btn_prev: "Previous", btn_next: "Next", btn_submit: "Submit", btn_restart: "Add other symptoms",
         quick_1: "I am hurt", quick_2: "Stomachache", quick_3: "Headache", quick_4: "Fever", quick_5: "Nosebleed", quick_6: "Feel like vomiting",
@@ -47,9 +67,19 @@ const translations = {
         nurse_mode: "Nurse Mode", pin_prompt: "Enter PIN:", no_records: "No records found.", delete: "Delete", summary_title: "AI Summary", error_api: "Error generating summary.",
         summary_symptom: "Symptom", summary_part: "Part", summary_symptom_label: "Symptoms", summary_pain: "Pain Level", summary_time: "Start Time", summary_allergy_info: "🏥 Allergy Info", summary_allergy_label: "Allergies",
         pain_min: "No pain", pain_max: "Worst pain", btn_start_over: "Start over",
-        popup_success: "Successfully Sent!", popup_desc: "It has been sent to the teacher.", belly_chest: "Chest"
+        popup_success: "Successfully Sent!", popup_desc: "It has been sent to the teacher.", belly_chest: "Chest", profile_title: "Enter Profile", profile_grade: "Grade", profile_class: "Class", profile_number: "Number", profile_name: "Name", profile_placeholder: "Type here", profile_next: "Next"
     },
     zh: {
+        belly_all: "整个腹部",
+        belly_top_all: "整个上腹部",
+        belly_bottom_all: "整个下腹部",
+        belly_left_top: "左上腹",
+        belly_right_top: "右上腹",
+        belly_left_bottom: "左下腹",
+        belly_right_bottom: "右下腹",
+        pain_1: "疼痛 1",
+        pain_2: "疼痛 2",
+
         lang_name: "中文", step_0_title: "请选择语言。", step_1_title: "哪里不舒服？", step_2_title: "怎么不舒服？", step_3_title: "有多痛？", step_4_title: "什么时候开始的？", step_5_title: "这样发送吗？",
         btn_prev: "上一步", btn_next: "下一步", btn_submit: "确认 (发送)", btn_restart: "添加其他症状",
         quick_1: "受伤了", quick_2: "肚子痛", quick_3: "头痛", quick_4: "发烧", quick_5: "流鼻血", quick_6: "想吐",
@@ -71,9 +101,19 @@ const translations = {
         nurse_mode: "护士模式", pin_prompt: "请输入密码:", no_records: "没有记录。", delete: "删除", summary_title: "AI 总结", error_api: "生成总结时出错。",
         summary_symptom: "症状", summary_part: "部位", summary_symptom_label: "症状", summary_pain: "疼痛程度", summary_time: "开始时间", summary_allergy_info: "🏥 过敏信息", summary_allergy_label: "过敏",
         pain_min: "不痛", pain_max: "非常痛", btn_start_over: "重新填写",
-        popup_success: "发送成功！", popup_desc: "已经发送给老师。", belly_chest: "胸部"
+        popup_success: "发送成功！", popup_desc: "已经发送给老师。", belly_chest: "胸部", profile_title: "输入信息", profile_grade: "年级", profile_class: "班级", profile_number: "学号", profile_name: "姓名", profile_placeholder: "输入", profile_next: "下一步"
     },
     ru: {
+        belly_all: "Весь живот",
+        belly_top_all: "Весь верх живота",
+        belly_bottom_all: "Весь низ живота",
+        belly_left_top: "Верхняя левая часть",
+        belly_right_top: "Верхняя правая часть",
+        belly_left_bottom: "Нижняя левая часть",
+        belly_right_bottom: "Нижняя правая часть",
+        pain_1: "Боль 1",
+        pain_2: "Боль 2",
+
         lang_name: "Русский", step_0_title: "Выберите язык.", step_1_title: "Где болит?", step_2_title: "Как болит?", step_3_title: "Насколько сильно болит?", step_4_title: "Когда это началось?", step_5_title: "Всё верно?",
         btn_prev: "Назад", btn_next: "Вперед", btn_submit: "Отправить", btn_restart: "Добавить еще симптомы",
         quick_1: "Я поранился(лась)", quick_2: "Болит живот", quick_3: "Болит голова", quick_4: "Температура", quick_5: "Кровь из носа", quick_6: "Тошнит",
@@ -95,9 +135,19 @@ const translations = {
         nurse_mode: "Режим медсестры", pin_prompt: "Введите пароль:", no_records: "Записей нет.", delete: "Удалить", summary_title: "Сводка ИИ", error_api: "Ошибка генерации сводки.",
         summary_symptom: "Симптом", summary_part: "Часть", summary_symptom_label: "Симптомы", summary_pain: "Уровень боли", summary_time: "Время начала", summary_allergy_info: "🏥 Инфо об аллергии", summary_allergy_label: "Аллергии",
         pain_min: "Не болит", pain_max: "Очень больно", btn_start_over: "Начать заново",
-        popup_success: "Успешно отправлено!", popup_desc: "Отправлено учителю.", belly_chest: "Грудь"
+        popup_success: "Успешно отправлено!", popup_desc: "Отправлено учителю.", belly_chest: "Грудь", profile_title: "Введите данные", profile_grade: "Класс", profile_class: "Группа", profile_number: "Номер", profile_name: "Имя", profile_placeholder: "Введите", profile_next: "Далее"
     },
     vi: {
+        belly_all: "Toàn bộ bụng",
+        belly_top_all: "Toàn bộ bụng trên",
+        belly_bottom_all: "Toàn bộ bụng dưới",
+        belly_left_top: "Bụng trên bên trái",
+        belly_right_top: "Bụng trên bên phải",
+        belly_left_bottom: "Bụng dưới bên trái",
+        belly_right_bottom: "Bụng dưới bên phải",
+        pain_1: "Cơn đau 1",
+        pain_2: "Cơn đau 2",
+
         lang_name: "Tiếng Việt", step_0_title: "Chọn ngôn ngữ của bạn.", step_1_title: "Đau ở đâu?", step_2_title: "Đau như thế nào?", step_3_title: "Đau nhiều không?", step_4_title: "Bắt đầu từ khi nào?", step_5_title: "Như thế này đúng không?",
         btn_prev: "Trước", btn_next: "Tiếp theo", btn_submit: "Gửi", btn_restart: "Thêm triệu chứng khác",
         quick_1: "Bị thương", quick_2: "Đau bụng", quick_3: "Đau đầu", quick_4: "Sốt", quick_5: "Chảy máu cam", quick_6: "Buồn nôn",
@@ -119,9 +169,19 @@ const translations = {
         nurse_mode: "Chế độ y tá", pin_prompt: "Nhập mật khẩu:", no_records: "Không có hồ sơ.", delete: "Xóa", summary_title: "Tóm tắt AI", error_api: "Lỗi tạo tóm tắt.",
         summary_symptom: "Triệu chứng", summary_part: "Bộ phận", summary_symptom_label: "Các triệu chứng", summary_pain: "Mức độ đau", summary_time: "Thời gian bắt đầu", summary_allergy_info: "🏥 Thông tin dị ứng", summary_allergy_label: "Dị ứng",
         pain_min: "Không đau", pain_max: "Rất đau", btn_start_over: "Làm lại từ đầu",
-        popup_success: "Gửi thành công!", popup_desc: "Đã được gửi cho giáo viên.", belly_chest: "Ngực"
-    }
+        popup_success: "Gửi thành công!", popup_desc: "Đã được gửi cho giáo viên.", belly_chest: "Ngực", profile_title: "Nhập thông tin", profile_grade: "Khối", profile_class: "Lớp", profile_number: "Số", profile_name: "Tên", profile_placeholder: "Nhập", profile_next: "Tiếp theo"
+    },
     ja: {
+        belly_all: "お腹全体",
+        belly_top_all: "上腹部全体",
+        belly_bottom_all: "下腹部全体",
+        belly_left_top: "左上腹部",
+        belly_right_top: "右上腹部",
+        belly_left_bottom: "左下腹部",
+        belly_right_bottom: "右下腹部",
+        pain_1: "痛み 1",
+        pain_2: "痛み 2",
+
         lang_name: "日本語",
         step_0_title: "ことばをえらんでね",
         step_1_title: "どこがいたいですか？",
@@ -221,9 +281,19 @@ const translations = {
         btn_start_over: "さいしょからやりなおす",
         popup_success: "おくりました！",
         popup_desc: "せんせいに伝わりました。",
-        belly_chest: "むね"
+        belly_chest: "むね", profile_title: "じょうほうをいれる", profile_grade: "がくねん", profile_class: "くみ", profile_number: "ばんごう", profile_name: "なまえ", profile_placeholder: "ここにかいてね", profile_next: "つぎへ"
     },
     tl: {
+        belly_all: "Buong tiyan",
+        belly_top_all: "Buong itaas",
+        belly_bottom_all: "Buong ibaba",
+        belly_left_top: "Kaliwang itaas",
+        belly_right_top: "Kanang itaas",
+        belly_left_bottom: "Kaliwang ibaba",
+        belly_right_bottom: "Kanang ibaba",
+        pain_1: "Sakit 1",
+        pain_2: "Sakit 2",
+
         lang_name: "Tagalog",
         step_0_title: "Pumili ng wika",
         step_1_title: "Saan ang masakit?",
@@ -323,9 +393,19 @@ const translations = {
         btn_start_over: "Ulitin",
         popup_success: "Naipadala Na!",
         popup_desc: "Naipadala na ito sa teacher.",
-        belly_chest: "Dibdib"
+        belly_chest: "Dibdib", profile_title: "Impormasyon", profile_grade: "Baitang", profile_class: "Seksyon", profile_number: "Numero", profile_name: "Pangalan", profile_placeholder: "Ilagay", profile_next: "Susunod"
     },
     km: {
+        belly_all: "ពោះទាំងមូល",
+        belly_top_all: "ពោះផ្នែកខាងលើទាំងមូល",
+        belly_bottom_all: "ពោះផ្នែកខាងក្រោមទាំងមូល",
+        belly_left_top: "ពោះខាងឆ្វេងផ្នែកខាងលើ",
+        belly_right_top: "ពោះខាងស្តាំផ្នែកខាងលើ",
+        belly_left_bottom: "ពោះខាងឆ្វេងផ្នែកខាងក្រោម",
+        belly_right_bottom: "ពោះខាងស្តាំផ្នែកខាងក្រោម",
+        pain_1: "ការឈឺចាប់ទី 1",
+        pain_2: "ការឈឺចាប់ទី 2",
+
         lang_name: "ភាសាខ្មែរ",
         step_0_title: "ជ្រើសរើសភាសារបស់អ្នក។",
         step_1_title: "តើអ្នកឈឺនៅឯណា?",
@@ -425,9 +505,19 @@ const translations = {
         btn_start_over: "ចាប់ផ្តើមម្តងទៀត",
         popup_success: "បានផ្ញើដោយជោគជ័យ!",
         popup_desc: "វាត្រូវបានផ្ញើទៅលោកគ្រូអ្នកគ្រូ។",
-        belly_chest: "ទ្រូង"
+        belly_chest: "ទ្រូង", profile_title: "បញ្ចូលព័ត៌មាន", profile_grade: "ថ្នាក់", profile_class: "បន្ទប់", profile_number: "លេខ", profile_name: "ឈ្មោះ", profile_placeholder: "សរសេរ", profile_next: "បន្ទាប់"
     },
     th: {
+        belly_all: "ท้องทั้งหมด",
+        belly_top_all: "ท้องส่วนบนทั้งหมด",
+        belly_bottom_all: "ท้องส่วนล่างทั้งหมด",
+        belly_left_top: "ท้องส่วนบนซ้าย",
+        belly_right_top: "ท้องส่วนบนขวา",
+        belly_left_bottom: "ท้องส่วนล่างซ้าย",
+        belly_right_bottom: "ท้องส่วนล่างขวา",
+        pain_1: "ความเจ็บปวด 1",
+        pain_2: "ความเจ็บปวด 2",
+
         lang_name: "ภาษาไทย",
         step_0_title: "เลือกภาษาของคุณ",
         step_1_title: "เจ็บตรงไหนคะ/ครับ?",
@@ -527,9 +617,19 @@ const translations = {
         btn_start_over: "เริ่มใหม่",
         popup_success: "ส่งสำเร็จแล้ว!",
         popup_desc: "ส่งให้คุณครูเรียบร้อยแล้ว",
-        belly_chest: "หน้าอก"
+        belly_chest: "หน้าอก", profile_title: "ใส่ข้อมูล", profile_grade: "ชั้น", profile_class: "ห้อง", profile_number: "เลขที่", profile_name: "ชื่อ", profile_placeholder: "พิมพ์", profile_next: "ถัดไป"
     },
     mn: {
+        belly_all: "Бүхэл бүтэн гэдэс",
+        belly_top_all: "Гэдэсний дээд хэсэг",
+        belly_bottom_all: "Гэдэсний доод хэсэг",
+        belly_left_top: "Зүүн дээд хэсэг",
+        belly_right_top: "Баруун дээд хэсэг",
+        belly_left_bottom: "Зүүн доод хэсэг",
+        belly_right_bottom: "Баруун доод хэсэг",
+        pain_1: "Өвдөлт 1",
+        pain_2: "Өвдөлт 2",
+
         lang_name: "Монгол хэл",
         step_0_title: "Хэлээ сонгоно уу.",
         step_1_title: "Хаана өвдөж байна вэ?",
@@ -629,9 +729,19 @@ const translations = {
         btn_start_over: "Дахин эхлэх",
         popup_success: "Амжилттай илгээгдлээ!",
         popup_desc: "Багшид илгээгдлээ.",
-        belly_chest: "Цээж"
+        belly_chest: "Цээж", profile_title: "Мэдээлэл оруулах", profile_grade: "Анги", profile_class: "Бүлэг", profile_number: "Дугаар", profile_name: "Нэр", profile_placeholder: "Бичих", profile_next: "Дараах"
     },
     uz: {
+        belly_all: "Butun qorin",
+        belly_top_all: "Butun yuqori qorin",
+        belly_bottom_all: "Butun pastki qorin",
+        belly_left_top: "Chap yuqori qorin",
+        belly_right_top: "O'ng yuqori qorin",
+        belly_left_bottom: "Chap pastki qorin",
+        belly_right_bottom: "O'ng pastki qorin",
+        pain_1: "Og'riq 1",
+        pain_2: "Og'riq 2",
+
         lang_name: "O'zbek",
         step_0_title: "Tilingizni tanlang.",
         step_1_title: "Qayeringiz og'riyapti?",
@@ -731,9 +841,19 @@ const translations = {
         btn_start_over: "Boshidan boshlash",
         popup_success: "Muvaffaqiyatli yuborildi!",
         popup_desc: "O'qituvchiga yuborildi.",
-        belly_chest: "Ko'krak"
+        belly_chest: "Ko'krak", profile_title: "Ma'lumot kiriting", profile_grade: "Sinf", profile_class: "Guruh", profile_number: "Raqam", profile_name: "Ism", profile_placeholder: "Yozing", profile_next: "Keyingi"
     },
     ar: {
+        belly_all: "البطن بالكامل",
+        belly_top_all: "أعلى البطن بالكامل",
+        belly_bottom_all: "أسفل البطن بالكامل",
+        belly_left_top: "أعلى يسار البطن",
+        belly_right_top: "أعلى يمين البطن",
+        belly_left_bottom: "أسفل يسار البطن",
+        belly_right_bottom: "أسفل يمين البطن",
+        pain_1: "ألم 1",
+        pain_2: "ألم 2",
+
         lang_name: "العربية",
         step_0_title: "اختر لغتك.",
         step_1_title: "أين يؤلمك؟",
@@ -833,7 +953,7 @@ const translations = {
         btn_start_over: "البدء من جديد",
         popup_success: "تم الإرسال بنجاح!",
         popup_desc: "تم الإرسال إلى المعلم.",
-        belly_chest: "الصدر"
+        belly_chest: "الصدر", profile_title: "أدخل بياناتك", profile_grade: "الصف", profile_class: "الفصل", profile_number: "الرقم", profile_name: "الاسم", profile_placeholder: "اكتب", profile_next: "التالي"
     },
   };
   

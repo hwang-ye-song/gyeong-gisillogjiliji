@@ -51,16 +51,19 @@ async function processSyncQueue() {
         console.log("processSyncQueue: invoke result", { data, error });
 
         if (error) {
-          record.ai_summary = `Edge Function 오류: ${error.message}`;
           console.error("Edge Function Error:", error);
+          record.ai_summary = `[기본 요약(AI 응답 지연)]\n${symptomsText}${allergyText}`;
         } else if (data && data.choices && data.choices.length > 0) {
           record.ai_summary = data.choices[0].message.content;
+        } else if (data && data.error) {
+          console.error("API Error:", data.error);
+          record.ai_summary = `[기본 요약(AI 크레딧 소진)]\n${symptomsText}${allergyText}`;
         } else {
-          record.ai_summary = `API 응답 오류: ${JSON.stringify(data)}`;
+          record.ai_summary = `[기본 요약]\n${symptomsText}${allergyText}`;
         }
       } catch (e) {
         console.error(e);
-        record.ai_summary = `네트워크/시스템 오류: ${e.message}`;
+        record.ai_summary = `[기본 요약(네트워크 오류)]\n${symptomsText}${allergyText}`;
       }
     }
 

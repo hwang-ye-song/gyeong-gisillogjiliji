@@ -37,17 +37,17 @@
       <h1 class="welcome-title" data-i18n="step_0_title">언어를 선택하세요</h1>
       <div class="lang-grid">
         <button class="lang-btn" data-lang="ko"><span class="emoji">🇰🇷</span><span class="text">한국어</span></button>
-        <button class="lang-btn" data-lang="zh"><span class="emoji">🇨🇳</span><span class="text">中文</span><span class="sub-text">한국어</span></button>
-        <button class="lang-btn" data-lang="vi"><span class="emoji">🇻🇳</span><span class="text">Tiếng Việt</span><span class="sub-text">한국어</span></button>
-        <button class="lang-btn" data-lang="ja"><span class="emoji">🇯🇵</span><span class="text">日本語</span><span class="sub-text">한국어</span></button>
-        <button class="lang-btn" data-lang="tl"><span class="emoji">🇵🇭</span><span class="text">Tagalog</span><span class="sub-text">한국어</span></button>
-        <button class="lang-btn" data-lang="km"><span class="emoji">🇰🇭</span><span class="text">ភាសាខ្មែរ</span><span class="sub-text">한국어</span></button>
-        <button class="lang-btn" data-lang="th"><span class="emoji">🇹🇭</span><span class="text">ภาษาไทย</span><span class="sub-text">한국어</span></button>
-        <button class="lang-btn" data-lang="mn"><span class="emoji">🇲🇳</span><span class="text">Монгол</span><span class="sub-text">한국어</span></button>
-        <button class="lang-btn" data-lang="uz"><span class="emoji">🇺🇿</span><span class="text">O'zbek</span><span class="sub-text">한국어</span></button>
-        <button class="lang-btn" data-lang="ru"><span class="emoji">🇷🇺</span><span class="text">Русский</span><span class="sub-text">한국어</span></button>
-        <button class="lang-btn" data-lang="en"><span class="emoji">🇺🇸</span><span class="text">English</span><span class="sub-text">한국어</span></button>
-        <button class="lang-btn" data-lang="ar"><span class="emoji">🇸🇦</span><span class="text">العربية</span><span class="sub-text">한국어</span></button>
+        <button class="lang-btn" data-lang="zh"><span class="emoji">🇨🇳</span><span class="text">中文</span></button>
+        <button class="lang-btn" data-lang="vi"><span class="emoji">🇻🇳</span><span class="text">Tiếng Việt</span></button>
+        <button class="lang-btn" data-lang="ja"><span class="emoji">🇯🇵</span><span class="text">日本語</span></button>
+        <button class="lang-btn" data-lang="tl"><span class="emoji">🇵🇭</span><span class="text">Tagalog</span></button>
+        <button class="lang-btn" data-lang="km"><span class="emoji">🇰🇭</span><span class="text">ភាសាខ្មែរ</span></button>
+        <button class="lang-btn" data-lang="th"><span class="emoji">🇹🇭</span><span class="text">ภาษาไทย</span></button>
+        <button class="lang-btn" data-lang="mn"><span class="emoji">🇲🇳</span><span class="text">Монгол</span></button>
+        <button class="lang-btn" data-lang="uz"><span class="emoji">🇺🇿</span><span class="text">O'zbek</span></button>
+        <button class="lang-btn" data-lang="ru"><span class="emoji">🇷🇺</span><span class="text">Русский</span></button>
+        <button class="lang-btn" data-lang="en"><span class="emoji">🇺🇸</span><span class="text">English</span></button>
+        <button class="lang-btn" data-lang="ar"><span class="emoji">🇸🇦</span><span class="text">العربية</span></button>
       </div>
     </div>
     <button id="btn-nurse-lock" class="btn-icon nurse-lock-corner">🔒</button>
@@ -63,7 +63,7 @@
           let state = getState();
           state.lang = e.currentTarget.dataset.lang;
           saveState(state);
-          window.location.href = 'step1.html';
+          window.location.href = 'step0_profile.html';
         });
       });
     });

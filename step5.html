@@ -149,6 +149,10 @@
         const queue = JSON.parse(localStorage.getItem('sync_queue') || '[]');
         queue.push({
           lang: state.lang,
+          grade: state.grade,
+          class_num: state.class_num,
+          student_num: state.student_num,
+          student_name: state.name,
           entries_json: finalEntries,
           emergency_flags: Array.from(flags),
           created_at: new Date().toISOString()

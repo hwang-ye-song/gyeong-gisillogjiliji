@@ -447,3 +447,27 @@ h2 {
   .face-btn { width: 56px; height: 56px; }
   .face-btn .emoji { font-size: 1.5rem; }
 }
+
+
+/* Belly Sub UI */
+.belly-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+  font-weight: bold;
+  color: var(--text-sub);
+  z-index: 10;
+  pointer-events: none;
+}
+.belly-label .label-text { font-size: 1.2rem; }
+.belly-label .label-icon { font-size: 1.5rem; }
+.label-left { left: -3.5rem; }
+.label-right { right: -3.5rem; }
+
+@media (max-width: 450px) {
+  .label-left { left: -2.5rem; }
+  .label-right { right: -2.5rem; }
+  .belly-label .label-text { font-size: 1rem; }
+  .belly-label .label-icon { font-size: 1.2rem; }
+}

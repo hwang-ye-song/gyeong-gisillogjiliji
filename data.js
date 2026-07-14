@@ -338,11 +338,7 @@ const translations = {
       document.querySelectorAll('[data-i18n]').forEach(el => {
           const key = el.getAttribute('data-i18n');
           if (translations[state.lang] && translations[state.lang][key]) {
-              if (state.lang !== 'ko' && translations.ko[key]) {
-                  el.innerHTML = `${translations[state.lang][key]} <div class="ko-text">${translations.ko[key]}</div>`;
-              } else {
-                  el.innerHTML = translations[state.lang][key];
-              }
+              el.innerHTML = translations[state.lang][key];
           }
       });
   }

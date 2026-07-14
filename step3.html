@@ -78,7 +78,7 @@
             <button class="face-btn" data-pain="10"><div class="emoji">😭</div><div class="label">10</div></button>
           </div>
           <div class="pain-label">
-            <span>😄 안 아파요</span> ← → <span>😭 너무 아파요</span>
+            <span>😄 ${translations[state.lang].pain_min || translations.ko.pain_min}</span> ← → <span>😭 ${translations[state.lang].pain_max || translations.ko.pain_max}</span>
           </div>
         `;
         container.appendChild(block);

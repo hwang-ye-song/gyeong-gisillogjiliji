@@ -21,7 +21,8 @@ const translations = {
       vomit_1: "1번", vomit_2: "2번", vomit_3: "3번 이상",
       allergy_title: "알레르기가 있어요?", allergy_none: "없어요", allergy_drug: "약", allergy_peanut: "땅콩/견과류", allergy_milk: "우유", allergy_egg: "계란", allergy_seafood: "해산물", allergy_peach: "복숭아", allergy_wheat: "밀가루",
       nurse_mode: "보건교사 모드", pin_prompt: "비밀번호를 입력하세요:", no_records: "접수된 문진표가 없습니다.", delete: "삭제", summary_title: "AI 요약 내용", error_api: "요약 생성 중 오류가 발생했습니다.",
-      summary_symptom: "증상", summary_part: "부위", summary_symptom_label: "증상", summary_pain: "통증 정도", summary_time: "시작 시간", summary_allergy_info: "🏥 알레르기 정보", summary_allergy_label: "알레르기"
+      summary_symptom: "증상", summary_part: "부위", summary_symptom_label: "증상", summary_pain: "통증 정도", summary_time: "시작 시간", summary_allergy_info: "🏥 알레르기 정보", summary_allergy_label: "알레르기",
+      pain_min: "안 아파요", pain_max: "너무 아파요", btn_start_over: "새로 작성하기"
     },
     en: {
         lang_name: "English", step_0_title: "Choose your language.", step_1_title: "Where does it hurt?", step_2_title: "How does it hurt?", step_3_title: "How much does it hurt?", step_4_title: "When did it start?", step_5_title: "Is this correct?",
@@ -43,7 +44,8 @@ const translations = {
         vomit_1: "1 time", vomit_2: "2 times", vomit_3: "3 or more times",
         allergy_title: "Do you have any allergies?", allergy_none: "None", allergy_drug: "Medicine", allergy_peanut: "Peanuts/Nuts", allergy_milk: "Milk", allergy_egg: "Eggs", allergy_seafood: "Seafood", allergy_peach: "Peach", allergy_wheat: "Wheat",
         nurse_mode: "Nurse Mode", pin_prompt: "Enter PIN:", no_records: "No records found.", delete: "Delete", summary_title: "AI Summary", error_api: "Error generating summary.",
-        summary_symptom: "Symptom", summary_part: "Part", summary_symptom_label: "Symptoms", summary_pain: "Pain Level", summary_time: "Start Time", summary_allergy_info: "🏥 Allergy Info", summary_allergy_label: "Allergies"
+        summary_symptom: "Symptom", summary_part: "Part", summary_symptom_label: "Symptoms", summary_pain: "Pain Level", summary_time: "Start Time", summary_allergy_info: "🏥 Allergy Info", summary_allergy_label: "Allergies",
+        pain_min: "No pain", pain_max: "Worst pain", btn_start_over: "Start over"
     },
     zh: {
         lang_name: "中文", step_0_title: "请选择语言。", step_1_title: "哪里不舒服？", step_2_title: "怎么不舒服？", step_3_title: "有多痛？", step_4_title: "什么时候开始的？", step_5_title: "这样发送吗？",
@@ -65,7 +67,8 @@ const translations = {
         vomit_1: "1次", vomit_2: "2次", vomit_3: "3次以上",
         allergy_title: "有过敏吗？", allergy_none: "没有", allergy_drug: "药物", allergy_peanut: "花生/坚果", allergy_milk: "牛奶", allergy_egg: "鸡蛋", allergy_seafood: "海鲜", allergy_peach: "桃子", allergy_wheat: "小麦",
         nurse_mode: "护士模式", pin_prompt: "请输入密码:", no_records: "没有记录。", delete: "删除", summary_title: "AI 总结", error_api: "生成总结时出错。",
-        summary_symptom: "症状", summary_part: "部位", summary_symptom_label: "症状", summary_pain: "疼痛程度", summary_time: "开始时间", summary_allergy_info: "🏥 过敏信息", summary_allergy_label: "过敏"
+        summary_symptom: "症状", summary_part: "部位", summary_symptom_label: "症状", summary_pain: "疼痛程度", summary_time: "开始时间", summary_allergy_info: "🏥 过敏信息", summary_allergy_label: "过敏",
+        pain_min: "不痛", pain_max: "非常痛", btn_start_over: "重新填写"
     },
     ru: {
         lang_name: "Русский", step_0_title: "Выберите язык.", step_1_title: "Где болит?", step_2_title: "Как болит?", step_3_title: "Насколько сильно болит?", step_4_title: "Когда это началось?", step_5_title: "Всё верно?",
@@ -87,7 +90,8 @@ const translations = {
         vomit_1: "1 раз", vomit_2: "2 раза", vomit_3: "3 или более раз",
         allergy_title: "Есть аллергия?", allergy_none: "Нет", allergy_drug: "Лекарства", allergy_peanut: "Арахис/Орехи", allergy_milk: "Молоко", allergy_egg: "Яйца", allergy_seafood: "Морепродукты", allergy_peach: "Персик", allergy_wheat: "Пшеница",
         nurse_mode: "Режим медсестры", pin_prompt: "Введите пароль:", no_records: "Записей нет.", delete: "Удалить", summary_title: "Сводка ИИ", error_api: "Ошибка генерации сводки.",
-        summary_symptom: "Симптом", summary_part: "Часть", summary_symptom_label: "Симптомы", summary_pain: "Уровень боли", summary_time: "Время начала", summary_allergy_info: "🏥 Инфо об аллергии", summary_allergy_label: "Аллергии"
+        summary_symptom: "Симптом", summary_part: "Часть", summary_symptom_label: "Симптомы", summary_pain: "Уровень боли", summary_time: "Время начала", summary_allergy_info: "🏥 Инфо об аллергии", summary_allergy_label: "Аллергии",
+        pain_min: "Не болит", pain_max: "Очень больно", btn_start_over: "Начать заново"
     },
     vi: {
         lang_name: "Tiếng Việt", step_0_title: "Chọn ngôn ngữ của bạn.", step_1_title: "Đau ở đâu?", step_2_title: "Đau như thế nào?", step_3_title: "Đau nhiều không?", step_4_title: "Bắt đầu từ khi nào?", step_5_title: "Như thế này đúng không?",
@@ -109,7 +113,8 @@ const translations = {
         vomit_1: "1 lần", vomit_2: "2 lần", vomit_3: "3 lần trở lên",
         allergy_title: "Có dị ứng không?", allergy_none: "Không có", allergy_drug: "Thuốc", allergy_peanut: "Đậu phộng/Hạt", allergy_milk: "Sữa", allergy_egg: "Trứng", allergy_seafood: "Hải sản", allergy_peach: "Đào", allergy_wheat: "Lúa mì",
         nurse_mode: "Chế độ y tá", pin_prompt: "Nhập mật khẩu:", no_records: "Không có hồ sơ.", delete: "Xóa", summary_title: "Tóm tắt AI", error_api: "Lỗi tạo tóm tắt.",
-        summary_symptom: "Triệu chứng", summary_part: "Bộ phận", summary_symptom_label: "Các triệu chứng", summary_pain: "Mức độ đau", summary_time: "Thời gian bắt đầu", summary_allergy_info: "🏥 Thông tin dị ứng", summary_allergy_label: "Dị ứng"
+        summary_symptom: "Triệu chứng", summary_part: "Bộ phận", summary_symptom_label: "Các triệu chứng", summary_pain: "Mức độ đau", summary_time: "Thời gian bắt đầu", summary_allergy_info: "🏥 Thông tin dị ứng", summary_allergy_label: "Dị ứng",
+        pain_min: "Không đau", pain_max: "Rất đau", btn_start_over: "Làm lại từ đầu"
     }
   };
   

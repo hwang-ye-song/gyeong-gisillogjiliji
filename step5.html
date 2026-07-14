@@ -135,7 +135,7 @@
         container.innerHTML += `<div class="entry-summary"><h3>${t.summary_allergy_info}</h3><div class="summary-item"><strong>${t.summary_allergy_label}:</strong> <span>${allergyLabels}</span></div></div>`;
       }
 
-      document.getElementById('btn-restart').innerText = "새로 작성하기";
+      document.getElementById('btn-restart').innerText = t.btn_start_over || "새로 작성하기";
       document.getElementById('btn-restart').addEventListener('click', () => {
         clearState();
         window.location.href = 'index.html';

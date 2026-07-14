@@ -8,7 +8,7 @@
 </head>
 <body>
   <header>
-    <button class="btn btn-secondary" onclick="window.history.back()">
+    <button id="btn-back" class="btn btn-secondary">
       <span class="icon">◀</span> <span class="text" data-i18n="btn_prev">이전</span>
     </button>
     <div id="progress-bar"><div id="progress-fill" style="width: 90%;"></div><span id="progress-text">4.5 / 5</span></div>
@@ -41,6 +41,10 @@
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
       
+      document.getElementById('btn-back').addEventListener('click', () => {
+        window.location.href = 'step4.html';
+      });
+
       const btnNext = document.getElementById('btn-next');
 
       // Allergy selection logic

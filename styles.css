@@ -203,9 +203,10 @@ h2 {
 /* ─── Language Grid (index.html) ─── */
 .lang-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 0.75rem;
 }
+
 
 .lang-btn {
   display: flex;

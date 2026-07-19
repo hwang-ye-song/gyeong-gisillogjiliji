@@ -59,23 +59,43 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
-      if (!state.part) { window.location.href = 'step1.html'; return; }
+      if (!state.records || state.records.length === 0) { window.location.href = 'step1.html'; return; }
 
       const fContainer = document.getElementById('follow-up-container');
       const btnNext = document.getElementById('btn-next');
       
       let needFollowUp = false;
-      const sStr = state.symptoms.join(' ');
+      let allSymptoms = [];
+      let hasBelly = false;
+      let hasFever = false;
+      let hasVomit = false;
 
-      if (state.part === '배' || sStr.includes('배')) {
+      state.records.forEach((record, rIdx) => {
+         record.symptoms.forEach((s, sIdx) => {
+             allSymptoms.push({
+                 id: `time_${rIdx}_${sIdx}`,
+                 partName: record.partObj.name,
+                 symptom: s,
+                 recordIndex: rIdx
+             });
+             if (s.includes('배')) hasBelly = true;
+             if (s.includes('열이 나요')) hasFever = true;
+             if (s.includes('토할 것 같아요')) hasVomit = true;
+         });
+         if (record.partObj.lookupPart === '배' || record.partObj.lookupPart === '윗배' || record.partObj.lookupPart === '아랫배' || record.partObj.lookupPart === '몸통') {
+             hasBelly = true;
+         }
+      });
+
+      if (hasBelly) {
         document.getElementById('follow-belly').classList.remove('hidden');
         needFollowUp = true;
       }
-      if (sStr.includes('열이 나요')) {
+      if (hasFever) {
         document.getElementById('follow-fever').classList.remove('hidden');
         needFollowUp = true;
       }
-      if (sStr.includes('토할 것 같아요')) {
+      if (hasVomit) {
         document.getElementById('follow-vomit').classList.remove('hidden');
         needFollowUp = true;
       }
@@ -83,17 +103,21 @@
       const container = document.getElementById('time-list-container');
       const btnRestart = document.getElementById('btn-restart');
       
-      state.startTimes = state.startTimes || {};
-
       function checkCompletion() {
-        const timeComplete = state.symptoms.every(s => state.startTimes[s]);
+        const timeComplete = allSymptoms.every(item => state.records[item.recordIndex].startTimes && state.records[item.recordIndex].startTimes[item.symptom]);
         let followUpComplete = true;
         if (needFollowUp) {
           const visibleQs = document.querySelectorAll('#follow-up-container > div:not(.hidden)');
           visibleQs.forEach(q => { if (!q.querySelector('.selected')) followUpComplete = false; });
         }
         
-        if (timeComplete && followUpComplete) {
+        let traumaComplete = true;
+        const traumaBoxes = document.querySelectorAll('.follow-up-box');
+        traumaBoxes.forEach(box => {
+            if (!box.querySelector('.selected')) traumaComplete = false;
+        });
+        
+        if (timeComplete && followUpComplete && traumaComplete) {
           btnNext.classList.remove('hidden');
           btnRestart.classList.remove('hidden');
         } else {
@@ -102,26 +126,56 @@
         }
       }
 
-      state.symptoms.forEach(symptom => {
+      allSymptoms.forEach(item => {
+        const { id, partName, symptom, recordIndex } = item;
         const translatedSymptom = translateKoToLang(symptom, state.lang);
+        
+        let translatedPart = partName;
+        const t = translations[state.lang] || translations['ko'];
+        if (t[partName]) translatedPart = t[partName];
+        else if (t[state.records[recordIndex].partObj.id]) translatedPart = t[state.records[recordIndex].partObj.id];
+        
+        const isTrauma = /다침|상처|피|멍|부러|화상|동물|벌레|삐었/.test(symptom);
+
+        let followUpHtml = '';
+        if (isTrauma) {
+            followUpHtml = `
+              <div class="follow-up-box" data-record-index="${recordIndex}" data-symptom="${symptom}" style="margin-top:1rem; padding:1rem; background:#FFFBEB; border:1px solid #FCD34D; border-radius:8px;">
+                <p style="font-weight:bold; margin-bottom:0.5rem; color:#B45309;" data-i18n="follow_trauma">어떻게 다쳤나요?</p>
+                <div class="symptoms-grid single-select trauma-grid" style="grid-template-columns: repeat(1, 1fr); gap: 0.5rem;">
+                  <button class="symptom-card" data-trauma="trauma_friend"><span class="text" data-i18n="trauma_friend">친구랑 장난치다</span></button>
+                  <button class="symptom-card" data-trauma="trauma_alone"><span class="text" data-i18n="trauma_alone">혼자 넘어짐/부딪힘</span></button>
+                  <button class="symptom-card" data-trauma="trauma_sports"><span class="text" data-i18n="trauma_sports">체육시간/운동하다가</span></button>
+                </div>
+              </div>
+            `;
+        }
+
         const block = document.createElement('div');
         block.className = 'symptom-time-block';
         block.style.width = '100%';
         block.innerHTML = `
-          <h3 style="text-align: center; color: var(--primary); margin-bottom: 1rem;">${translatedSymptom}</h3>
-          <div class="symptoms-grid single-select time-grid" data-symptom="${symptom}">
-            <button class="symptom-card" data-time="time_1"><span class="emoji">⏱️</span><span class="text" data-i18n="time_1">방금 전</span></button>
-            <button class="symptom-card" data-time="time_2"><span class="emoji">🌅</span><span class="text" data-i18n="time_2">오늘 아침</span></button>
-            <button class="symptom-card" data-time="time_3"><span class="emoji">🌙</span><span class="text" data-i18n="time_3">어제</span></button>
-            <button class="symptom-card" data-time="time_4"><span class="emoji">📅</span><span class="text" data-i18n="time_4">며칠 전</span></button>
-            <button class="symptom-card" data-time="idk"><span class="emoji">❓</span><span class="text" data-i18n="idk">잘 모르겠어요</span></button>
+          <h3 style="text-align: center; color: var(--primary); margin-bottom: 1rem;"><span style="font-size: 0.9em; color: var(--text-sub);">[${translatedPart}]</span><br>${translatedSymptom}</h3>
+          <div class="symptoms-grid single-select time-grid" style="grid-template-columns: repeat(3, 1fr); gap: 0.5rem;" data-id="${id}" data-record-index="${recordIndex}" data-symptom="${symptom}">
+            <button class="symptom-card" data-time="time_before"><span class="emoji">🏠</span><span class="text" data-i18n="time_before" style="font-size:0.9rem;">학교오기 전</span></button>
+            <button class="symptom-card" data-time="time_p1"><span class="emoji">1️⃣</span><span class="text" data-i18n="time_p1" style="font-size:0.9rem;">1교시</span></button>
+            <button class="symptom-card" data-time="time_p2"><span class="emoji">2️⃣</span><span class="text" data-i18n="time_p2" style="font-size:0.9rem;">2교시</span></button>
+            <button class="symptom-card" data-time="time_p3"><span class="emoji">3️⃣</span><span class="text" data-i18n="time_p3" style="font-size:0.9rem;">3교시</span></button>
+            <button class="symptom-card" data-time="time_p4"><span class="emoji">4️⃣</span><span class="text" data-i18n="time_p4" style="font-size:0.9rem;">4교시</span></button>
+            <button class="symptom-card" data-time="time_lunch"><span class="emoji">🍱</span><span class="text" data-i18n="time_lunch" style="font-size:0.9rem;">점심시간</span></button>
+            <button class="symptom-card" data-time="time_p5"><span class="emoji">5️⃣</span><span class="text" data-i18n="time_p5" style="font-size:0.9rem;">5교시</span></button>
+            <button class="symptom-card" data-time="time_p6"><span class="emoji">6️⃣</span><span class="text" data-i18n="time_p6" style="font-size:0.9rem;">6교시</span></button>
+            <button class="symptom-card" data-time="time_days"><span class="emoji">📅</span><span class="text" data-i18n="time_days" style="font-size:0.9rem;">며칠 전</span></button>
+            <button class="symptom-card" data-time="idk" style="grid-column: span 3;"><span class="emoji">❓</span><span class="text" data-i18n="idk">잘 모르겠어요</span></button>
           </div>
+          ${followUpHtml}
         `;
         container.appendChild(block);
 
         // Restore if exists
-        if (state.startTimes[symptom]) {
-          const key = Object.keys(translations.ko).find(k => translations.ko[k] === state.startTimes[symptom]);
+        const rRec = state.records[recordIndex];
+        if (rRec.startTimes && rRec.startTimes[symptom]) {
+          const key = Object.keys(translations.ko).find(k => translations.ko[k] === rRec.startTimes[symptom]);
           if (key) {
              const btn = block.querySelector(`.symptom-card[data-time="${key}"]`);
              if (btn) btn.classList.add('selected');
@@ -133,12 +187,14 @@
 
       document.querySelectorAll('.time-grid').forEach(tg => {
         const symptom = tg.dataset.symptom;
+        const rIdx = tg.dataset.recordIndex;
         tg.querySelectorAll('.symptom-card').forEach(btn => {
           btn.addEventListener('click', (e) => {
             tg.querySelectorAll('.symptom-card').forEach(b => b.classList.remove('selected'));
             e.currentTarget.classList.add('selected');
             const key = e.currentTarget.dataset.time;
-            state.startTimes[symptom] = translations.ko[key] || "잘 모르겠어요";
+            state.records[rIdx].startTimes = state.records[rIdx].startTimes || {};
+            state.records[rIdx].startTimes[symptom] = translations.ko[key] || "잘 모르겠어요";
             saveState(state);
             
             if (needFollowUp) {

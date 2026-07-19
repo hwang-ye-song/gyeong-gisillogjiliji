@@ -17,29 +17,68 @@ async function processSyncQueue() {
 
     // 1. AI 요약이 없으면 생성
     if (!record.ai_summary) {
+      let symptomsText = '';
+      let allergyText = '';
+      let medicationText = '';
       try {
         console.log("processSyncQueue: generating AI summary");
-        const symptomsText = record.entries_json.map((e, i) => {
+        symptomsText = record.entries_json.map((e, i) => {
           let symptomParts = [];
           if (e.symptoms && e.symptoms.length > 0) {
             e.symptoms.forEach(s => {
               const p = e.painLevels && e.painLevels[s] ? e.painLevels[s] : (e.painLevel || 0);
               const t = e.startTimes && e.startTimes[s] ? e.startTimes[s] : (e.startTime || "모름");
-              symptomParts.push(`${s}(통증:${p}/10, 발현:${t})`);
+              const tc = e.traumaCauses && e.traumaCauses[s] ? `, 원인:${e.traumaCauses[s]}` : '';
+              symptomParts.push(`${s}(통증:${p}/10, 발현:${t}${tc})`);
             });
           }
           const sText = symptomParts.join(', ');
           return `[증상 ${i+1}] 부위: ${e.part} ${e.bellyPos || ''}, 증상 및 상태: ${sText}, 기타: ${e.followups.map(f => f.q + ' ' + f.a).join(', ')}`;
         }).join('\n');
         
-        let allergyText = "";
+        allergyText = "";
         const allergies = record.entries_json[0] && record.entries_json[0].allergies;
         if (allergies && allergies.length > 0 && !allergies.includes('allergy_none')) {
           const allergyMap = { "allergy_drug": "약", "allergy_peanut": "땅콩/견과류", "allergy_milk": "우유", "allergy_egg": "계란", "allergy_seafood": "해산물", "allergy_peach": "복숭아", "allergy_wheat": "밀가루" };
-          allergyText = `\n[알레르기 정보]: ${allergies.map(a => allergyMap[a] || a).join(', ')}`;
+          allergyText = `\n[알레르기 정보]: ${allergies.map(a => a.startsWith('custom_') ? a.substring(7) : (allergyMap[a] || a)).join(', ')}`;
         }
 
-        const promptText = `학생이 선택한 다음 증상들을 바탕으로, 보건 교사가 한눈에 파악할 수 있는 한국어 요약 문장을 2~3줄로 작성해. 병명을 진단하지 말고 의심 조합 규칙에만 기반하여 사실적으로 작성해.${allergyText}\n${symptomsText}`;
+        medicationText = "";
+        const medications = record.entries_json[0] && record.entries_json[0].medications;
+        if (medications && medications.length > 0 && !medications.includes('med_none')) {
+          const medMap = { "med_cold": "감기약", "med_pain": "진통제", "med_digest": "소화제", "med_hospital": "병원/처방약", "med_idk": "잘 모르겠음" };
+          medicationText = `\n[복용 중인 약]: ${medications.map(m => medMap[m] || m).join(', ')}`;
+        }
+
+        // 과거 방문 기록 조회
+        let previousHistoryText = "";
+        try {
+          if (record.student_name) {
+            const { data: pastRecords, error: pastError } = await db
+              .from('surveys')
+              .select('entries_json, created_at, ai_summary')
+              .eq('grade', record.grade)
+              .eq('class_num', record.class_num)
+              .eq('student_num', record.student_num)
+              .eq('student_name', record.student_name)
+              .order('created_at', { ascending: false })
+              .limit(3);
+              
+            if (!pastError && pastRecords && pastRecords.length > 0) {
+              const historyDetails = pastRecords.map(r => {
+                const dateStr = new Date(r.created_at).toLocaleDateString('ko-KR');
+                const parts = (r.entries_json || []).map(e => e.part).join(', ');
+                return `- ${dateStr} 방문: 아픈 부위 [${parts}] / AI요약 [${r.ai_summary || '없음'}]`;
+              }).join('\n');
+              
+              previousHistoryText = `\n\n[이전 보건실 방문 기록(최근 3회)]\n${historyDetails}\n* 지시사항: 위 이전 방문 기록을 참고하여 현재 증상과 연관성(예: 자주 체함, 동일 부위 반복 통증 등)이 있어 보인다면 요약에 짧게 언급하고, 연관성이 없다면 이전 기록은 언급하지 마.`;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch past records", e);
+        }
+
+        const promptText = `학생이 선택한 다음 증상들을 바탕으로, 보건 교사가 한눈에 파악할 수 있는 한국어 요약 문장을 2~3줄로 작성해. 병명을 진단하지 말고 의심 조합 규칙에만 기반하여 사실적으로 작성해.${allergyText}${medicationText}\n${symptomsText}${previousHistoryText}`;
 
         /* ===== [방법 2] Supabase Edge Function을 이용한 안전한 호출 =====
          * API Key가 노출되지 않도록 서버리스 함수에서 처리합니다.
@@ -57,13 +96,13 @@ async function processSyncQueue() {
           record.ai_summary = data.choices[0].message.content;
         } else if (data && data.error) {
           console.error("API Error:", data.error);
-          record.ai_summary = `[기본 요약(AI 크레딧 소진)]\n${symptomsText}${allergyText}`;
+          record.ai_summary = `[기본 요약(AI 크레딧 소진)]\n${symptomsText}${allergyText}${medicationText}`;
         } else {
-          record.ai_summary = `[기본 요약]\n${symptomsText}${allergyText}`;
+          record.ai_summary = `[기본 요약]\n${symptomsText}${allergyText}${medicationText}`;
         }
       } catch (e) {
         console.error(e);
-        record.ai_summary = `[기본 요약(네트워크 오류)]\n${symptomsText}${allergyText}`;
+        record.ai_summary = `[기본 요약(네트워크 오류)]\n${symptomsText}${allergyText}${medicationText}`;
       }
     }
 

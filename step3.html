@@ -105,7 +105,29 @@
       });
       
       btnNext.addEventListener('click', () => {
-        window.location.href = 'step4.html';
+        // Save to records
+        state.records.push({
+            partObj: state.currentPartObj,
+            symptoms: [...state.symptoms],
+            painLevels: {...state.painLevels}
+        });
+        
+        // Remove completed part from queue
+        state.partsQueue.shift();
+        
+        // Clear temp state for next part
+        state.symptoms = [];
+        state.painLevels = {};
+        state.currentPartObj = null;
+        
+        saveState(state);
+        
+        // Loop back to step2 if more parts, otherwise go to step4
+        if (state.partsQueue.length > 0) {
+            window.location.href = 'step2.html';
+        } else {
+            window.location.href = 'step4.html';
+        }
       });
     });
   </script>

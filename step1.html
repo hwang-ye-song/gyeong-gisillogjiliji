@@ -123,6 +123,8 @@
           state.hurtMethod = null; 
           state.hurtState = null; 
           state.symptoms = [];
+          state.records = [];
+          state.partsQueue = null;
           
           if (partKey === 'part_chest') {
             state.part = (translations.ko['part_belly'] || '가슴/배/등') + ' (' + (translations.ko['belly_chest'] || '가슴') + ')';
@@ -135,8 +137,11 @@
             state.symptoms.push(translations.ko['idk']);
             saveState(state);
             window.location.href = 'step4.html';
-          } else if (partKey === 'part_arm' || partKey === 'part_leg') {
-            state.sideSelect = partKey === 'part_arm' ? 'arm' : 'leg';
+          } else if (partKey === 'part_arm') {
+            saveState(state);
+            window.location.href = 'step1_arm.html';
+          } else if (partKey === 'part_leg') {
+            state.sideSelect = 'leg';
             saveState(state);
             window.location.href = 'step1_sub.html';
           } else if (partKey === 'part_head' || partKey === 'part_belly') {

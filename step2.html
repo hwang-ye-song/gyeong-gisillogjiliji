@@ -26,6 +26,7 @@
         <button class="symptom-card" data-hurt="hurt_2"><span class="emoji">💥</span><span class="text" data-i18n="hurt_2">부딪힘</span></button>
         <button class="symptom-card" data-hurt="hurt_3"><span class="emoji">🔪</span><span class="text" data-i18n="hurt_3">베임</span></button>
         <button class="symptom-card" data-hurt="hurt_4"><span class="emoji">🦶</span><span class="text" data-i18n="hurt_4">접질림</span></button>
+        <button class="symptom-card btn-idk-card"><span class="emoji">❓</span><span class="text" data-i18n="idk">잘 모르겠어요</span></button>
       </div>
     </div>
     
@@ -35,6 +36,7 @@
         <button class="symptom-card" data-state="state_2"><span class="emoji">🎈</span><span class="text" data-i18n="state_2">부었어요</span></button>
         <button class="symptom-card" data-state="state_3"><span class="emoji">🫐</span><span class="text" data-i18n="state_3">멍들었어요</span></button>
         <button class="symptom-card" data-state="state_4"><span class="emoji">⚡</span><span class="text" data-i18n="state_4">움직이면 아파요</span></button>
+        <button class="symptom-card btn-idk-card"><span class="emoji">❓</span><span class="text" data-i18n="idk">잘 모르겠어요</span></button>
       </div>
     </div>
 
@@ -42,6 +44,7 @@
       <div class="symptoms-grid single-select">
         <button class="symptom-card" data-headq="yes"><span class="emoji">⭕</span><span class="text" data-i18n="yes">네</span></button>
         <button class="symptom-card" data-headq="no"><span class="emoji">❌</span><span class="text" data-i18n="no">아니요</span></button>
+        <button class="symptom-card btn-idk-card"><span class="emoji">❓</span><span class="text" data-i18n="idk">잘 모르겠어요</span></button>
       </div>
     </div>
 
@@ -49,7 +52,7 @@
     <div id="symptoms-container" class="symptoms-grid hidden"></div>
 
     <div class="step-actions">
-      <button class="btn btn-secondary btn-idk" data-i18n="idk">잘 모르겠어요</button>
+      
       <button id="btn-next" class="btn btn-primary" data-i18n="btn_next">다음</button>
     </div>
   </section>
@@ -59,14 +62,23 @@
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
       
-      // Ensure defaults if missing from storage
+      state.records = state.records || [];
+      
+      // Convert legacy single part to partsQueue
+      if ((!state.partsQueue || state.partsQueue.length === 0) && state.part) {
+          state.partsQueue = [{ id: 'single', name: state.part, lookupPart: state.part }];
+      }
+      
+      // If no queue, go back
+      if (!state.partsQueue || state.partsQueue.length === 0) {
+          window.location.href = 'step1.html'; return;
+      }
+      
+      state.currentPartObj = state.partsQueue[0];
       state.symptoms = state.symptoms || [];
       
-      // If no part selected, go back
-      if (!state.part) { window.location.href = 'step1.html'; return; }
-
       // Reset symptoms if going back to this page
-      if (state.part !== '다쳤어요') {
+      if (state.currentPartObj.lookupPart !== '다쳤어요') {
           state.symptoms = state.symptoms.filter(s => !s.startsWith('다침:'));
       }
 
@@ -82,7 +94,7 @@
       };
 
       // 1. Hurt Flow
-      if (state.part === '다쳤어요' && !state.hurtMethod) {
+      if (state.currentPartObj.lookupPart === '다쳤어요' && !state.hurtMethod) {
         updateTitle('hurt_how');
         showFlow('hurt-flow-1');
         document.querySelectorAll('[data-hurt]').forEach(btn => {
@@ -114,23 +126,31 @@
         updateTitle('step_2_title');
         
         const partDisplay = document.getElementById('selected-part-display');
-        let displayStr = state.part;
-        if (state.sideSelect) displayStr += ` (${state.sideSelect})`;
-        if (state.bellyPos) displayStr = state.bellyPos;
-        partDisplay.innerText = `📍 선택한 부위: ${displayStr}`;
+        
+        // Display title with loop index context
+        const total = state.records.length + state.partsQueue.length;
+        const currentIdx = state.records.length + 1;
+        
+        let displayStr = state.currentPartObj.name;
+        // Translate belly parts if needed
+        const t = translations[state.lang] || translations['ko'];
+        if (t[displayStr]) displayStr = t[displayStr];
+        else if (t[state.currentPartObj.id]) displayStr = t[state.currentPartObj.id];
+        
+        if (total > 1) {
+             partDisplay.innerText = `📍 ${t['pain_1'] ? t['pain_1'].replace('1', currentIdx) : '통증 ' + currentIdx}: ${displayStr}`;
+        } else {
+             partDisplay.innerText = `📍 ${t['summary_part'] || '선택한 부위'}: ${displayStr}`;
+        }
         
         showFlow('symptoms-container');
         const container = document.getElementById('symptoms-container');
         container.innerHTML = '';
         
-        // Extract sub-part first, then fall back to base part
-        // e.g. "팔·손 (왼쪽 어깨·윗팔)" → try "어깨·윗팔" first, then "팔·손"
-        let lookupPart = state.part;
-        if (state.part.includes(' (')) {
-            const base = state.part.split(' (')[0];
-            const detail = state.part.split(' (')[1].replace(')', '');
-            // detail is like "왼쪽 어깨·윗팔" or "양쪽 다 손·손목"
-            // Extract the last part after side label
+        let lookupPart = state.currentPartObj.lookupPart;
+        if (lookupPart.includes(' (')) {
+            const base = lookupPart.split(' (')[0];
+            const detail = lookupPart.split(' (')[1].replace(')', '');
             const subParts = ['어깨·윗팔', '팔꿈치·아랫팔', '손·손목', '허벅지', '무릎', '종아리·발목', '발'];
             const found = subParts.find(sp => detail.includes(sp));
             lookupPart = found && symptomsData[found] ? found : base;
@@ -154,10 +174,21 @@
           };
           container.appendChild(btn);
         });
+        
+        // Add IDK card
+        const idkBtn = document.createElement('button');
+        idkBtn.className = 'symptom-card btn-idk-card';
+        idkBtn.innerHTML = `<span class="emoji">❓</span><span class="text">${translations[state.lang].idk || translations.ko.idk}</span>`;
+        idkBtn.onclick = () => {
+            state.symptoms = [translations.ko.idk];
+            saveState(state);
+            window.location.href = 'step3.html';
+        };
+        container.appendChild(idkBtn);
 
         document.getElementById('btn-next').disabled = state.symptoms.length === 0;
         document.getElementById('btn-next').onclick = () => {
-          if (state.part === '머리' && state.symptoms.some(s => s === '머리를 다쳤어요' || s === '부딪혔어요')) {
+          if (state.currentPartObj.lookupPart === '머리' && state.symptoms.some(s => s === '머리를 다쳤어요' || s === '부딪혔어요')) {
             updateTitle('head_q');
             showFlow('head-q-flow');
           } else {
@@ -175,16 +206,32 @@
         });
       }
 
-      // I don't know button
-      document.querySelector('.btn-idk').addEventListener('click', () => {
-        state.symptoms.push(translations.ko['idk']);
-        saveState(state);
-        window.location.href = 'step3.html';
+      // I don't know button logic for hardcoded flows
+      document.querySelectorAll('.btn-idk-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (state.currentPartObj.lookupPart === '다쳤어요') {
+            if (!state.hurtMethod) {
+              state.hurtMethod = translations.ko.idk;
+              saveState(state);
+              updateTitle('hurt_state');
+              showFlow('hurt-flow-2');
+            } else {
+              state.hurtState = translations.ko.idk;
+              state.symptoms = [`다침: ${state.hurtMethod}, ${state.hurtState}`];
+              saveState(state);
+              window.location.href = 'step3.html';
+            }
+          } else if (!document.getElementById('head-q-flow').classList.contains('hidden')) {
+            state.headQ = null; // or whatever represents idk for headQ
+            saveState(state);
+            window.location.href = 'step3.html';
+          }
+        });
       });
 
       // Back Button
       document.getElementById('btn-back').addEventListener('click', () => {
-        if (state.part === '다쳤어요') {
+        if (state.currentPartObj.lookupPart === '다쳤어요') {
           if (state.hurtMethod && !state.hurtState) {
             state.hurtMethod = null;
             saveState(state);

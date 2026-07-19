@@ -320,7 +320,8 @@
             symptomDisplay = e.symptoms.map(s => {
               const p = e.painLevels && e.painLevels[s] ? e.painLevels[s] : (e.painLevel || 0);
               const t = e.startTimes && e.startTimes[s] ? e.startTimes[s] : (e.startTime || "모름");
-              return `• <strong>${s}</strong> - 통증: <span style="color:${p >= 8 ? '#DC2626' : 'inherit'}; font-weight:bold;">${p}/10</span>, 발현 시점: ${t}`;
+              const tc = e.traumaCauses && e.traumaCauses[s] ? `<span style="color:#B45309; font-weight:bold; margin-left:8px;">[외상원인: ${e.traumaCauses[s]}]</span>` : '';
+              return `• <strong>${s}</strong> - 통증: <span style="color:${p >= 8 ? '#DC2626' : 'inherit'}; font-weight:bold;">${p}/10</span>, 발현 시점: ${t}${tc}`;
             }).join('<br>');
           }
           
@@ -329,16 +330,32 @@
             <strong>[증상 ${idx+1}] ${e.part} ${e.bellyPos ? `(${e.bellyPos})` : ''}</strong><br>
             <div style="margin-top: 0.5rem; color: #4B5563;">
               ${symptomDisplay}<br>
-              ${e.followups.map(f => `• ${f.q} <strong>${f.a}</strong><br>`).join('')}
+              ${(e.followups || []).map(f => `• ${f.q} <strong>${f.a}</strong><br>`).join('')}
             </div>
           </div>
         `}).join('');
+
+
+        let medHtml = "";
+        const medications = r.entries_json && r.entries_json[0] && r.entries_json[0].medications;
+        if (medications && medications.length > 0 && !medications.includes('med_none')) {
+          const medMap = { "med_cold": "감기약", "med_pain": "진통제", "med_digest": "소화제", "med_hospital": "병원/처방약", "med_idk": "잘 모르겠어요" };
+          const medLabels = medications.map(m => medMap[m] || m).join(', ');
+          medHtml = `
+            <div style="margin-top: 1rem; padding: 0.75rem; background-color: #EFF6FF; border: 1px solid #93C5FD; border-radius: 0.5rem;">
+              <strong style="color: #1D4ED8;">💊 복용 약:</strong> <span style="color: #1E3A8A; font-weight: 600;">${medLabels}</span>
+            </div>
+          `;
+        }
 
         let allergyHtml = "";
         const allergies = r.entries_json && r.entries_json[0] && r.entries_json[0].allergies;
         if (allergies && allergies.length > 0 && !allergies.includes('allergy_none')) {
           const allergyMap = { "allergy_drug": "약", "allergy_peanut": "땅콩/견과류", "allergy_milk": "우유", "allergy_egg": "계란", "allergy_seafood": "해산물", "allergy_peach": "복숭아", "allergy_wheat": "밀가루" };
-          const allergyLabels = allergies.map(a => allergyMap[a] || a).join(', ');
+          const allergyLabels = allergies.map(a => {
+            if (a.startsWith('custom_')) return a.substring(7);
+            return allergyMap[a] || a;
+          }).join(', ');
           allergyHtml = `
             <div style="margin-top: 1rem; padding: 0.75rem; background-color: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 0.5rem;">
               <strong style="color: #DC2626;">🏥 알레르기 주의:</strong> <span style="color: #991B1B; font-weight: 600;">${allergyLabels}</span>
@@ -346,11 +363,13 @@
           `;
         }
 
+        const studentInfoStr = `${r.grade || '?'}학년 ${r.class_num || '?'}반 ${r.student_num || '?'}번 ${r.student_name || '이름없음'}`;
         return `
           <div class="record-card ${isEmergency ? 'emergency' : ''}">
             <div class="record-header">
               <div>
                 ${badges}
+                <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.25rem; color: var(--primary);">${studentInfoStr}</div>
                 <div class="record-meta">${dateStr} | 작성 언어: ${r.lang}</div>
               </div>
               <button class="btn-resolve" onclick="resolveRecord('${r.id}')">확인 완료</button>
@@ -364,7 +383,7 @@
               <div class="entry-grid">
                 ${entriesHtml}
               </div>
-              ${allergyHtml}
+              ${medHtml}${allergyHtml}
             </div>
           </div>
         `;

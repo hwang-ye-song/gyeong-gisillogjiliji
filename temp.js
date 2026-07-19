@@ -1,109 +1,4 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>그림 터치 문진표 - 정확히 어디인가요?</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <header>
-    <button id="btn-back" class="btn btn-secondary">
-      <span class="icon">◀</span> <span class="text" data-i18n="btn_prev">이전</span>
-    </button>
-    <div id="progress-bar"><div id="progress-fill" style="width: 20%;"></div><span id="progress-text">1 / 5</span></div>
-    <button id="btn-nurse-lock" class="btn-icon">🔒</button>
-  </header>
 
-  <section class="step active">
-    <h1 class="speakable"><span id="title-span" data-i18n="step_1_title">어디가 아파요?</span><button class="btn-speaker">🔊</button></h1>
-    
-    <!-- Head Position Overlay -->
-    <div id="head-pos-flow" class="hidden hurt-flow">
-      <div class="symptoms-grid single-select">
-        <button class="symptom-card" data-sub="part_head"><span class="emoji">🧑</span><span class="text" data-i18n="part_head">머리</span></button>
-        <button class="symptom-card" data-sub="part_neck"><span class="emoji">🦒</span><span class="text" data-i18n="part_neck">목</span></button>
-        <button class="symptom-card" data-sub="part_eye"><span class="emoji">👁️</span><span class="text" data-i18n="part_eye">눈</span></button>
-        <button class="symptom-card" data-sub="part_ear"><span class="emoji">👂</span><span class="text" data-i18n="part_ear">귀</span></button>
-        <button class="symptom-card" data-sub="part_nose"><span class="emoji">👃</span><span class="text" data-i18n="part_nose">코</span></button>
-        <button class="symptom-card" data-sub="part_mouth"><span class="emoji">👄</span><span class="text" data-i18n="part_mouth">입·이</span></button>
-      </div>
-    </div>
-
-    <!-- Side (Left/Right/Both) Selection Overlay -->
-    <div id="side-select-flow" class="hidden hurt-flow">
-      <div class="symptoms-grid single-select">
-        <button class="symptom-card" data-side="left"><span class="emoji">👈</span><span class="text" data-i18n="side_left">왼쪽</span></button>
-        <button class="symptom-card" data-side="right"><span class="emoji">👉</span><span class="text" data-i18n="side_right">오른쪽</span></button>
-        <button class="symptom-card" data-side="both"><span class="emoji">🙌</span><span class="text" data-i18n="side_both">양쪽 다</span></button>
-      </div>
-    </div>
-    
-    <!-- Arm Part Selection Overlay -->
-    <div id="arm-part-flow" class="hidden hurt-flow">
-      <div class="symptoms-grid single-select">
-        <button class="symptom-card" data-sub="arm_upper"><span class="emoji">🦾</span><span class="text" data-i18n="arm_upper">어깨·윗팔</span></button>
-        <button class="symptom-card" data-sub="arm_lower"><span class="emoji">🦾</span><span class="text" data-i18n="arm_lower">팔꿈치·아랫팔</span></button>
-        <button class="symptom-card" data-sub="arm_hand"><span class="emoji">🖐️</span><span class="text" data-i18n="arm_hand">손·손목</span></button>
-      </div>
-    </div>
-
-    <!-- Leg Part Selection Overlay -->
-    <div id="leg-part-flow" class="hidden hurt-flow">
-      <div class="symptoms-grid single-select">
-        <button class="symptom-card" data-sub="leg_thigh"><span class="emoji">🦵</span><span class="text" data-i18n="leg_thigh">허벅지</span></button>
-        <button class="symptom-card" data-sub="leg_knee"><span class="emoji">🦵</span><span class="text" data-i18n="leg_knee">무릎</span></button>
-        <button class="symptom-card" data-sub="leg_calf"><span class="emoji">🦵</span><span class="text" data-i18n="leg_calf">종아리·발목</span></button>
-        <button class="symptom-card" data-sub="leg_foot"><span class="emoji">🦶</span><span class="text" data-i18n="leg_foot">발</span></button>
-      </div>
-    </div>
-
-    
-    <!-- Belly Position Overlay -->
-    <div id="belly-pos-flow" class="hidden hurt-flow" style="position: relative; width: 100%; max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; align-items: center;">
-      <!-- Labels -->
-      <div class="belly-label label-left">
-        <span class="label-text" data-i18n="side_left">왼쪽</span><br><span class="label-icon">🖐️</span>
-      </div>
-      <div class="belly-label label-right">
-        <span class="label-text" data-i18n="side_right">오른쪽</span><br><span class="label-icon">🤚</span>
-      </div>
-      
-      <!-- Container -->
-      <div id="belly-container" style="position: relative; width: 100%; aspect-ratio: 1472/1496; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); background: #fff;">
-        <img src="qhrqn.png" alt="Belly" style="width: 100%; height: 100%; display: block; pointer-events: none; user-select: none;" draggable="false" />
-        
-        <svg id="belly-svg" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
-          <style>
-            .belly-area { fill: transparent; stroke: rgba(156, 163, 175, 0.8); stroke-width: 0.5; stroke-dasharray: 1, 1; transition: fill 0.2s, stroke 0.2s; pointer-events: all; }
-            .belly-area.highlight { fill: rgba(255, 107, 107, 0.5); stroke: rgba(255, 107, 107, 1); stroke-width: 1.5; stroke-dasharray: none; }
-            .belly-area.highlight-danger { fill: rgba(239, 68, 68, 0.5); stroke: var(--emergency); stroke-width: 1.5; stroke-dasharray: none; }
-          </style>
-          <path d="M0.0 0.0 L0.0 50.0 L50.0 50.0 L50.0 0.0 Z" class="belly-area" data-sub="belly_left_top" />
-          <path d="M50.0 0.0 L50.0 50.0 L100.0 50.0 L100.0 0.0 Z" class="belly-area" data-sub="belly_right_top" />
-          <path d="M0.0 50.0 L0.0 100.0 L50.0 100.0 L50.0 50.0 Z" class="belly-area" data-sub="belly_left_bottom" />
-          <path d="M50.0 50.0 L50.0 100.0 L100.0 100.0 L100.0 50.0 Z" class="belly-area" data-sub="belly_right_bottom" />
-        </svg>
-
-        <canvas id="belly-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none;"></canvas>
-      </div>
-      
-            <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-        <button id="btn-draw-mode" class="btn btn-primary">그리기 🖍️</button>
-        <button id="btn-erase-mode" class="btn btn-secondary">지우개 🧼</button>
-        <button id="btn-clear-all" class="btn btn-secondary">전체 지우기 🗑️</button>
-        <button id="btn-belly-done" class="btn btn-primary" style="display: none; width: 100%;">확인 ✔️</button>
-      </div>
-    </div>
-
-
-    <div class="step-actions" style="justify-content: center;">
-      <button class="btn btn-secondary btn-idk" data-i18n="idk">잘 모르겠어요</button>
-    </div>
-  </section>
-
-  <script src="data.js"></script>
-  <script>
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
       
@@ -310,6 +205,7 @@
               state.partsQueue = null;
               document.getElementById('btn-belly-done').style.display = 'none';
           }
+          }
         };
 
         const stopDraw = () => {
@@ -348,7 +244,7 @@
         };
         
         document.getElementById('btn-belly-done').onclick = () => {
-          if (state.partsQueue && state.partsQueue.length > 0) {
+          if (state.bellyPos) {
             saveState(state);
             window.location.href = 'step2.html';
           }
@@ -392,6 +288,4 @@
 
       applyLanguageToUI();
     });
-  </script>
-</body>
-</html>
+  

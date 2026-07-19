@@ -70,39 +70,30 @@
         window.location.href = 'step4_allergy.html';
       });
 
-      // If we got here directly without an active entry but we have previous entries, it's weird, but handle it.
-      if (!state.part && state.previousEntries.length === 0) { window.location.href = 'step1.html'; return; }
+      if (!state.records || state.records.length === 0) { window.location.href = 'step1.html'; return; }
 
       const container = document.getElementById('summary-container');
       
-      // Build an array of all entries
-      let allEntries = [...state.previousEntries];
-      // Only push current if it's filled out
-      if (state.part) {
-        allEntries.push({
-          part: state.part,
-          bellyPos: state.bellyPos,
-          hurtMethod: state.hurtMethod,
-          hurtState: state.hurtState,
-          headQ: state.headQ,
-          symptoms: state.symptoms,
-          painLevels: state.painLevels,
-          startTimes: state.startTimes,
-          followups: state.followups
-        });
-      }
+      let allEntries = state.records.map(r => {
+          return {
+              part: r.partObj.lookupPart,
+              bellyPos: r.partObj.name !== r.partObj.lookupPart ? r.partObj.name : null,
+              symptoms: r.symptoms,
+              painLevels: r.painLevels,
+              startTimes: r.startTimes || {},
+              followups: state.followups || []
+          };
+      });
 
-      // Embed allergies into the first entry so db.js and nurse.html can access them
-      if (allEntries.length > 0 && state.allergies && state.allergies.length > 0) {
-        allEntries[0].allergies = state.allergies;
-      }
 
       container.innerHTML = allEntries.map((e, idx) => {
         const lang = state.lang || 'ko';
         const t = translations[lang] || translations.ko;
         
-        const translatedPart = translateKoToLang(e.part, state.lang);
-        const translatedBelly = e.bellyPos ? translateKoToLang(e.bellyPos, state.lang) : '';
+        let displayPartName = e.part;
+        if (e.bellyPos) displayPartName = e.bellyPos;
+        
+        let translatedPart = t[displayPartName] || translateKoToLang(displayPartName, state.lang) || displayPartName;
         
         const symptomDetails = e.symptoms.map(s => {
            const tSym = translateKoToLang(s, state.lang);
@@ -113,24 +104,37 @@
         }).join('<br>');
         
         let itemsHTML = `
-          <div class="summary-item"><strong>${t.summary_part}:</strong> <span>${translatedPart} ${translatedBelly ? `(${translatedBelly})` : ''}</span></div>
+          <div class="summary-item"><strong>${t.summary_part}:</strong> <span>${translatedPart}</span></div>
           <div class="summary-item"><strong>${t.summary_symptom_label}:</strong> <br><span style="display:inline-block; margin-top:0.3rem;">${symptomDetails}</span></div>
         `;
-        if (e.followups && e.followups.length) {
+        if (idx === 0 && e.followups && e.followups.length) {
           e.followups.forEach(f => {
-            const translatedQ = translateKoToLang(f.q, state.lang);
-            const translatedA = translateKoToLang(f.a, state.lang);
+            const translatedQ = t[f.q] || translateKoToLang(f.q, state.lang);
+            // answer might be stored as translation key e.g. 'yes', 'no'
+            const translatedA = t[f.a] || translateKoToLang(f.a, state.lang) || f.a;
             itemsHTML += `<div class="summary-item"><strong>${translatedQ}:</strong> <span>${translatedA}</span></div>`;
           });
         }
         return `<div class="entry-summary"><h3>${t.summary_symptom} ${idx + 1}</h3>${itemsHTML}</div>`;
       }).join('');
 
+
+      // Add medication info
+      if (state.medications && state.medications.length > 0) {
+        const lang = state.lang || 'ko';
+        const t = translations[lang] || translations.ko;
+        const medLabels = state.medications.map(m => translateKoToLang(translations.ko[m] || m, state.lang)).join(', ');
+        container.innerHTML += `<div class="entry-summary"><h3>${t.summary_med_info || '💊 복용 중인 약'}</h3><div class="summary-item"><strong>${t.summary_med_label || '복용 약'}:</strong> <span>${medLabels}</span></div></div>`;
+      }
+
       // Add allergy info (shared across all entries)
       if (state.allergies && state.allergies.length > 0) {
         const lang = state.lang || 'ko';
         const t = translations[lang] || translations.ko;
-        const allergyLabels = state.allergies.map(a => translateKoToLang(translations.ko[a] || a, state.lang)).join(', ');
+        const allergyLabels = state.allergies.map(a => {
+           if (a.startsWith('custom_')) return a.substring(7); // "custom_새우" -> "새우"
+           return translateKoToLang(translations.ko[a] || a, state.lang);
+        }).join(', ');
         container.innerHTML += `<div class="entry-summary"><h3>${t.summary_allergy_info}</h3><div class="summary-item"><strong>${t.summary_allergy_label}:</strong> <span>${allergyLabels}</span></div></div>`;
       }
 
@@ -143,6 +147,7 @@
         // DB 스키마 에러 방지: allergies를 별도 컬럼이 아닌 entries_json 내부에 저장
         if (finalEntries.length > 0) {
           finalEntries[0].allergies = state.allergies || [];
+          finalEntries[0].medications = state.medications || [];
         }
 
         // 로컬 큐에 추가 (db.js가 백그라운드에서 처리함)

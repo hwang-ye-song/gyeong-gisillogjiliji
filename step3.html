@@ -38,7 +38,7 @@
     </div>
     
     <div class="step-actions" style="margin-top: 1rem; text-align: center;">
-      <button id="btn-next" class="btn btn-primary hidden" data-i18n="btn_next">다음</button>
+      <button id="btn-next" class="btn btn-primary" data-i18n="btn_next" disabled>다음</button>
     </div>
   </section>
 
@@ -54,11 +54,7 @@
       const btnNext = document.getElementById('btn-next');
       
       function checkCompletion() {
-        if (state.symptoms.every(s => state.painLevels[s] !== undefined)) {
-          btnNext.classList.remove('hidden');
-        } else {
-          btnNext.classList.add('hidden');
-        }
+        btnNext.disabled = !state.symptoms.every(s => state.painLevels[s] !== undefined);
       }
 
       state.symptoms.forEach(symptom => {
@@ -104,6 +100,8 @@
         });
       });
       
+      applyLanguageToUI();
+
       btnNext.addEventListener('click', () => {
         // Save to records
         state.records.push({

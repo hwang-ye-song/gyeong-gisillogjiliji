@@ -38,8 +38,8 @@ const translations = {
         belly_right_top: "오른쪽 윗배",
         belly_left_bottom: "왼쪽 아랫배",
         belly_right_bottom: "오른쪽 아랫배",
-        pain_1: "통증 1",
-        pain_2: "통증 2",
+        pain_1: "아픈 곳 1",
+        pain_2: "아픈 곳 2",
 
       lang_name: "한국어", step_0_title: "언어를 선택하세요.", step_1_title: "어디가 아파요?", step_2_title: "어떻게 아파요?", step_3_title: "얼마나 아파요?", step_4_title: "언제부터 아파요?", step_5_title: "이대로 보낼까요?",
       btn_prev: "이전", btn_next: "다음", btn_submit: "맞아요 (보내기)", btn_restart: "다른 곳도 아파요",
@@ -56,10 +56,10 @@ const translations = {
       state_1: "피가 나요", state_2: "부었어요", state_3: "멍들었어요", state_4: "움직이면 아파요",
       head_q: "어지럽거나 토할 것 같아요?", yes: "네", no: "아니요",      follow_belly: "밥을 먹었어요?", follow_fever: "약을 먹었어요?", follow_vomit: "몇 번 토했어요?",
       vomit_1: "1번", vomit_2: "2번", vomit_3: "3번 이상",
-      allergy_title: "알레르기가 있어요?", allergy_none: "없어요", allergy_drug: "약", allergy_peanut: "땅콩/견과류", allergy_milk: "우유", allergy_egg: "계란", allergy_seafood: "해산물", allergy_peach: "복숭아", allergy_wheat: "밀가루",        med_title: "먹고 있는 약이 있나요?", med_none: "안 먹어요", med_cold: "감기약", med_pain: "진통제", med_digest: "소화제", med_hospital: "병원/처방약", med_idk: "잘 모르겠어요", summary_med_info: "💊 복용 중인 약", summary_med_label: "복용 약",
+      allergy_title: "알레르기가 있어요?", allergy_none: "없어요", allergy_drug: "약", allergy_peanut: "땅콩/견과류", allergy_milk: "우유", allergy_egg: "계란", allergy_seafood: "해산물", allergy_peach: "복숭아", allergy_wheat: "밀가루",        med_title: "먹고 있는 약이 있나요?", med_none: "안 먹어요", med_cold: "감기약", med_pain: "아픔약", med_digest: "배탈약", med_hospital: "병원에서 받은 약", med_idk: "잘 모르겠어요", summary_med_info: "💊 복용 중인 약", summary_med_label: "복용 약",
       
-        allergy_voice: "기타(직접 말하기)",
-      nurse_mode: "보건교사 모드", pin_prompt: "비밀번호를 입력하세요:", no_records: "접수된 문진표가 없습니다.", delete: "삭제", summary_title: "AI 요약 내용", error_api: "요약 생성 중 오류가 발생했습니다.",
+        allergy_voice: "직접 말할게요",
+      nurse_mode: "보건교사 모드", pin_prompt: "비밀번호를 입력하세요:", no_records: "접수된 문진표가 없습니다.", delete: "삭제", summary_title: "AI 요약 내용", error_api: "요약을 만들다가 오류가 났어요.",
       summary_symptom: "증상", summary_part: "부위", summary_symptom_label: "증상", summary_pain: "통증 정도", summary_time: "시작 시간", summary_allergy_info: "🏥 알레르기 정보", summary_allergy_label: "알레르기",
       pain_min: "안 아파요", pain_max: "너무 아파요", btn_start_over: "새로 작성하기",
       popup_success: "전달 완료!", popup_desc: "선생님께 전달되었습니다.", belly_chest: "가슴", profile_title: "내 정보 입력", profile_grade: "학년", profile_class: "반", profile_number: "번호", profile_name: "이름", profile_placeholder: "입력", profile_next: "다음으로"
@@ -1481,14 +1481,14 @@ const translations = {
     entries.forEach(data => {
       const symptomsStr = data.symptoms.map(s => s.ko || s).join(" ");
       
-      if (data.part === "머리" && data.hurtMethod && (data.headQ === "yes" || symptomsStr.includes("토할 것 같아요") || symptomsStr.includes("어지러워요"))) {
+      const hasTraumaCause = data.traumaCauses && Object.keys(data.traumaCauses).length > 0;
+      if (data.part === "머리" && hasTraumaCause && (data.headQ === "yes" || symptomsStr.includes("토할 것 같아요") || symptomsStr.includes("어지러워요"))) {
         flags.add("뇌진탕 의심");
       }
-      if (data.part === "배" && data.bellyPos === "오른쪽 아래" && maxPain >= 8) {
+      if ((data.part === "배" || data.part === "아랫배") && (data.bellyPos === "오른쪽 아래" || (data.bellyPos && data.bellyPos.includes("right_bottom"))) && maxPain >= 8) {
         flags.add("충수염 의심");
       }
     });
-
 
     if (allSymptoms.includes("두드러기가 났어요") && allSymptoms.includes("숨쉬기 힘들어요")) {
       flags.add("알레르기 쇼크 의심");

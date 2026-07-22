@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>그림 터치 문진표 - 알레르기</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; color: red; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .mic-pulsing { animation: pulse 1.5s infinite; display: inline-block; color: #EF4444; }
+  </style>
 </head>
 <body>
   <header>
@@ -49,7 +57,7 @@
     <!-- Voice Recognition Modal -->
     <div id="voice-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; display:none; align-items:center; justify-content:center; flex-direction:column; color:white;">
       <div style="background:white; color:black; padding:2rem; border-radius:1rem; width:90%; max-width:400px; text-align:center; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-        <div id="voice-status" style="font-size:1.2rem; font-weight:bold; margin-bottom:1rem;">마이크에 대고 말씀해주세요... 🎤</div>
+        <div id="voice-status" style="font-size:1.2rem; font-weight:bold; margin-bottom:1rem;">마이크에 대고 말씀해주세요... <span id="mic-icon" class="mic-pulsing">🎤</span></div>
         <div id="voice-transcript" style="color:#4B5563; min-height:3rem; margin-bottom:1rem; font-style:italic;"></div>
         
         <div id="voice-cards-container" class="hidden">
@@ -60,8 +68,11 @@
           <button id="btn-voice-confirm" class="btn btn-primary" style="width:100%; margin-bottom:0.5rem;">선택한 항목 추가하기</button>
         </div>
         
-        <button id="btn-voice-retry" class="btn btn-secondary" style="width:100%; margin-bottom:0.5rem;">다시 말하기</button>
-        <button id="btn-voice-cancel" class="btn" style="width:100%; background:#E5E7EB; color:#374151;">취소</button>
+        <div id="voice-controls">
+          <button id="btn-voice-finish" class="btn btn-primary" style="width:100%; margin-bottom:0.5rem; background-color:#10B981; border-color:#059669;">✅ 말하기 완료</button>
+          <button id="btn-voice-retry" class="btn btn-secondary" style="width:100%; margin-bottom:0.5rem;">다시 말하기</button>
+          <button id="btn-voice-cancel" class="btn" style="width:100%; background:#E5E7EB; color:#374151;">취소</button>
+        </div>
       </div>
     </div>
 
@@ -83,251 +94,27 @@
 
       const btnNext = document.getElementById('btn-next');
 
-      // Allergy state initialization & restore
+      // ----------------------------------------------------
+      // 1. 상태 초기화 및 화면 렌더링 복구
+      // ----------------------------------------------------
       state.allergies = (state.allergies || []).filter(a => a != null);
+      state.medications = state.medications || [];
+
+      // 기존 선택된 알레르기/약물 버튼 UI 반영
       state.allergies.forEach(a => {
         const btn = document.querySelector(`[data-allergy="${a}"]`);
         if (btn) btn.classList.add('selected');
       });
-      // Restore custom allergies (voice-added) that don't have pre-existing buttons
-      state.allergies.filter(a => a.startsWith('custom_')).forEach(key => {
-        if (!document.querySelector(`[data-allergy="${key}"]`)) {
-          const koName = key.substring(7);
-          const newBtn = document.createElement('button');
-          newBtn.className = 'symptom-card selected';
-          newBtn.dataset.allergy = key;
-          newBtn.innerHTML = `<span class="emoji">✨</span><span class="text">${koName}</span>`;
-          newBtn.addEventListener('click', (e) => {
-            if (e.currentTarget.classList.contains('selected')) {
-              e.currentTarget.classList.remove('selected');
-              state.allergies = state.allergies.filter(a => a !== key);
-            } else {
-              e.currentTarget.classList.add('selected');
-              state.allergies.push(key);
-            }
-            saveState(state);
-            checkComplete();
-          });
-          const grid = document.getElementById('allergy-grid');
-          const voiceBtn = document.getElementById('btn-voice-allergy');
-          if (voiceBtn) grid.insertBefore(newBtn, voiceBtn);
-          else grid.appendChild(newBtn);
-        }
-      });
-
-      // Medication selection logic
-      state.medications = state.medications || [];
-      // Restore previously selected medications
       state.medications.forEach(m => {
         const btn = document.querySelector(`[data-med="${m}"]`);
         if (btn) btn.classList.add('selected');
       });
 
-      // Voice Recognition Logic
-      const btnVoice = document.getElementById('btn-voice-allergy');
-      const voiceModal = document.getElementById('voice-modal');
-      const voiceStatus = document.getElementById('voice-status');
-      const voiceTranscript = document.getElementById('voice-transcript');
-      const voiceCardsContainer = document.getElementById('voice-cards-container');
-      const voiceCardsGrid = document.getElementById('voice-cards-grid');
-      const btnVoiceConfirm = document.getElementById('btn-voice-confirm');
-      const btnVoiceRetry = document.getElementById('btn-voice-retry');
-      const btnVoiceCancel = document.getElementById('btn-voice-cancel');
-
-      let recognition = null;
-      let finalExtractedAllergies = [];
-
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = true;
-      } else {
-        btnVoice.style.display = 'none'; // Hide if not supported
-      }
-
-      function startVoiceRecognition() {
-        if (!recognition) return;
-        
-        // Reset Modal UI
-        voiceModal.classList.remove('hidden');
-        voiceModal.style.display = 'flex';
-        voiceCardsContainer.classList.add('hidden');
-        voiceStatus.innerText = "마이크에 대고 말씀해주세요... 🎤";
-        voiceTranscript.innerText = "";
-        finalExtractedAllergies = [];
-        
-        // Set language dynamically
-        const langMap = {
-          ko: 'ko-KR', en: 'en-US', zh: 'zh-CN', ru: 'ru-RU', vi: 'vi-VN',
-          ja: 'ja-JP', tl: 'tl-PH', km: 'km-KH', th: 'th-TH', mn: 'mn-MN',
-          uz: 'uz-UZ', ar: 'ar-SA'
-        };
-        recognition.lang = langMap[state.lang] || 'ko-KR';
-
-        recognition.start();
-      }
-
-      btnVoice.addEventListener('click', (e) => {
-        e.preventDefault();
-        // Unselect "none" if selected
-        const noneBtn = document.querySelector('[data-allergy="allergy_none"]');
-        if (noneBtn && noneBtn.classList.contains('selected')) {
-           noneBtn.classList.remove('selected');
-           state.allergies = state.allergies.filter(a => a !== 'allergy_none');
+      // 이전에 음성으로 추가했던 알레르기(custom_*) 동적 생성 및 복원
+      state.allergies.filter(a => a.startsWith('custom_')).forEach(key => {
+        if (!document.querySelector(`[data-allergy="${key}"]`)) {
+          createCustomAllergyButton(key, key.substring(7));
         }
-        startVoiceRecognition();
-      });
-
-      btnVoiceCancel.addEventListener('click', () => {
-        if(recognition) recognition.stop();
-        voiceModal.style.display = 'none';
-        voiceModal.classList.add('hidden');
-      });
-
-      btnVoiceRetry.addEventListener('click', () => {
-        if(recognition) recognition.stop();
-        setTimeout(startVoiceRecognition, 300);
-      });
-
-      if(recognition) {
-        recognition.onresult = (event) => {
-          let interimTranscript = '';
-          let finalTranscript = '';
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript;
-            } else {
-              interimTranscript += event.results[i][0].transcript;
-            }
-          }
-          voiceTranscript.innerText = finalTranscript || interimTranscript;
-          
-          if (finalTranscript) {
-            processVoiceText(finalTranscript);
-          }
-        };
-
-        recognition.onerror = (event) => {
-          console.error("Speech recognition error", event.error);
-          voiceStatus.innerText = "인식 오류: " + event.error;
-        };
-      }
-
-      async function processVoiceText(text) {
-        voiceStatus.innerText = "AI가 분석 중입니다... 🤖";
-        const promptText = `너는 학생의 말을 듣고 알레르기 원인 물질을 추출 및 번역하는 의료 어시스턴트야.
-현재 학생이 사용하는 언어는 ${state.lang}야.
-[규칙]
-1. 학생의 음성 인식 결과에서 알레르기 원인 물질을 추출해.
-2. 추출된 단어를 학생이 읽을 수 있는 'native'와 보건교사가 읽을 'ko'(한국어) 두 가지 버전으로 작성해.
-3. 주의: 만약 학생의 언어(${state.lang})가 'ko'라면 'native'에도 억지로 외국어로 번역하지 말고 한국어 단어 그대로 똑같이 적어!
-4. 반드시 아래와 같은 순수 JSON 배열(Array of Objects) 형태로만 반환해! 다른 말은 절대 쓰지 마. 알레르기 원인이 없으면 빈 배열 [] 반환.
-[출력 예시]
-- 학생 언어가 'ru'일 때: [{"native": "креветки", "ko": "새우"}]
-- 학생 언어가 'ko'일 때: [{"native": "새우", "ko": "새우"}]
-학생 말: "${text}"`;
-
-        try {
-          const { data, error } = await db.functions.invoke('generate-ai-summary', {
-            body: { promptText: promptText }
-          });
-          
-          if (error) throw error;
-          let aiResponse = data.choices[0].message.content;
-          
-          // 파싱을 위해 앞뒤 불필요한 텍스트(마크다운 백틱 등) 제거
-          aiResponse = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();
-          
-          const extracted = JSON.parse(aiResponse);
-          if (extracted && extracted.length > 0) {
-             showExtractedCards(extracted);
-          } else {
-             voiceStatus.innerText = "알레르기를 찾지 못했어요 😢";
-             voiceTranscript.innerText = "다시 한 번 말씀해 주시겠어요?";
-          }
-        } catch(e) {
-          console.error("AI Extraction Error", e);
-          voiceStatus.innerText = "AI 분석 실패 😢";
-        }
-      }
-
-      function showExtractedCards(allergies) {
-        voiceStatus.innerText = "분석 완료!";
-        voiceCardsContainer.classList.remove('hidden');
-        voiceCardsGrid.innerHTML = '';
-        
-        allergies.forEach((item, index) => {
-           // 기본적으로 선택된 상태로 렌더링
-           const card = document.createElement('button');
-           card.className = 'symptom-card selected';
-           card.style.margin = '0';
-           card.style.padding = '0.5rem 1rem';
-           card.style.flex = '1 1 auto';
-           // native 텍스트 표시. 한국어랑 같다면 하나만 표시
-           const displayTxt = (item.native && item.native !== item.ko) ? `${item.native} (${item.ko})` : item.ko;
-           card.innerHTML = `<span class="text">${displayTxt}</span>`;
-           
-           // 클릭 시 토글
-           card.addEventListener('click', () => {
-             card.classList.toggle('selected');
-           });
-           
-           // Store data on DOM
-           card.dataset.ko = item.ko;
-           card.dataset.native = item.native;
-           
-           voiceCardsGrid.appendChild(card);
-        });
-      }
-
-      btnVoiceConfirm.addEventListener('click', () => {
-        // 선택된 카드들만 가져오기
-        const selectedCards = voiceCardsGrid.querySelectorAll('.symptom-card.selected');
-        selectedCards.forEach(card => {
-           const koName = card.dataset.ko;
-           const nativeName = card.dataset.native;
-           const displayTxt = (nativeName && nativeName !== koName) ? `${nativeName} (${koName})` : koName;
-           const key = `custom_${koName}`;
-           
-           // 메인 그리드에 이미 이 키를 가진 버튼이 있는지 확인
-           let existingBtn = document.querySelector(`[data-allergy="${key}"]`);
-           if (!existingBtn) {
-             // 버튼 새로 만들어서 그리드에 추가 (기타 버튼 바로 앞에)
-             existingBtn = document.createElement('button');
-             existingBtn.className = 'symptom-card selected';
-             existingBtn.dataset.allergy = key;
-             existingBtn.innerHTML = `<span class="emoji">✨</span><span class="text">${displayTxt}</span>`;
-             
-             existingBtn.addEventListener('click', (e) => {
-                if (e.currentTarget.classList.contains('selected')) {
-                  e.currentTarget.classList.remove('selected');
-                  state.allergies = state.allergies.filter(a => a !== key);
-                } else {
-                  e.currentTarget.classList.add('selected');
-                  state.allergies.push(key);
-                }
-                saveState(state);
-                checkComplete();
-             });
-             
-             // Insert before the voice button
-             const grid = document.getElementById('allergy-grid');
-             grid.insertBefore(existingBtn, btnVoice);
-           } else {
-             existingBtn.classList.add('selected');
-           }
-           
-           // state 배열에 추가
-           if (!state.allergies.includes(key)) {
-             state.allergies.push(key);
-           }
-        });
-        
-        saveState(state);
-        checkComplete();
-        voiceModal.style.display = 'none';
-        voiceModal.classList.add('hidden');
       });
 
       function checkComplete() {
@@ -341,10 +128,13 @@
       }
       checkComplete();
 
+      // ----------------------------------------------------
+      // 2. 일반 알레르기 / 약 클릭 이벤트 (하드코딩된 버튼들)
+      // ----------------------------------------------------
       document.querySelectorAll('#allergy-grid .symptom-card').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const key = e.currentTarget.dataset.allergy;
-          if (!key) return; // Skip voice button
+          if (!key) return; // '기타' 버튼 등 data-allergy가 없는 요소 무시
 
           if (key === 'allergy_none') {
             document.querySelectorAll('#allergy-grid .symptom-card').forEach(b => b.classList.remove('selected'));
@@ -394,9 +184,266 @@
           checkComplete();
         });
       });
+
       btnNext.addEventListener('click', () => {
         window.location.href = 'step5.html';
       });
+
+      // ----------------------------------------------------
+      // 3. 음성 인식 및 AI 추출 로직 (Clean Rewrite)
+      // ----------------------------------------------------
+      const btnVoice = document.getElementById('btn-voice-allergy');
+      const voiceModal = document.getElementById('voice-modal');
+      const voiceStatus = document.getElementById('voice-status');
+      const voiceTranscript = document.getElementById('voice-transcript');
+      const voiceControls = document.getElementById('voice-controls');
+      
+      const voiceCardsContainer = document.getElementById('voice-cards-container');
+      const voiceCardsGrid = document.getElementById('voice-cards-grid');
+      
+      const btnVoiceFinish = document.getElementById('btn-voice-finish');
+      const btnVoiceRetry = document.getElementById('btn-voice-retry');
+      const btnVoiceCancel = document.getElementById('btn-voice-cancel');
+      const btnVoiceConfirm = document.getElementById('btn-voice-confirm');
+
+      let recognition = null;
+      window.accumulatedTranscript = ""; // 전역 누적 텍스트
+
+      // Web Speech API 초기화
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+      } else {
+        btnVoice.style.display = 'none'; // 미지원 브라우저 숨김
+      }
+
+      function updateMicStatus(status) {
+        // status: 'listening' | 'paused' | 'analyzing'
+        if (status === 'listening') {
+          voiceStatus.innerHTML = '마이크에 대고 말씀해주세요... <span id="mic-icon" class="mic-pulsing">🎤</span>';
+        } else if (status === 'paused') {
+          voiceStatus.innerHTML = '마이크가 대기 중입니다. <span id="mic-icon">⏸️</span><br><small style="font-weight:normal; font-size:0.9rem; color:#6B7280;">(입력을 끝내려면 [✅ 말하기 완료] 버튼을 누르세요)</small>';
+        } else if (status === 'analyzing') {
+          voiceStatus.innerHTML = 'AI가 분석 중입니다... 🤖';
+        }
+      }
+
+      // 기타 버튼 클릭 시 모달 열고 녹음 시작
+      btnVoice.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // "없어요" 가 선택되어 있다면 해제
+        const noneBtn = document.querySelector('[data-allergy="allergy_none"]');
+        if (noneBtn && noneBtn.classList.contains('selected')) {
+           noneBtn.classList.remove('selected');
+           state.allergies = state.allergies.filter(a => a !== 'allergy_none');
+        }
+
+        if (!recognition) return;
+
+        // UI 상태 초기화
+        voiceModal.classList.remove('hidden');
+        voiceModal.style.display = 'flex';
+        voiceCardsContainer.classList.add('hidden');
+        voiceControls.classList.remove('hidden');
+        
+        voiceTranscript.innerText = "";
+        window.accumulatedTranscript = "";
+        updateMicStatus('listening');
+
+        // 언어 설정
+        const langMap = {
+          ko: 'ko-KR', en: 'en-US', zh: 'zh-CN', ru: 'ru-RU', vi: 'vi-VN',
+          ja: 'ja-JP', tl: 'tl-PH', km: 'km-KH', th: 'th-TH', mn: 'mn-MN',
+          uz: 'uz-UZ', ar: 'ar-SA'
+        };
+        recognition.lang = langMap[state.lang] || 'ko-KR';
+
+        try {
+          recognition.start();
+        } catch(e) {
+          console.warn("Recognition already started or error:", e);
+        }
+      });
+
+      if (recognition) {
+        recognition.onresult = (event) => {
+          let interim = '';
+          let finalChunk = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalChunk += event.results[i][0].transcript + ' ';
+            } else {
+              interim += event.results[i][0].transcript;
+            }
+          }
+          if (finalChunk) {
+            window.accumulatedTranscript += finalChunk;
+          }
+          voiceTranscript.innerText = window.accumulatedTranscript + interim;
+        };
+
+        recognition.onend = () => {
+          // 마이크가 강제로 종료된 경우 (사용자가 명시적으로 취소/완료를 안 눌렀을 때)
+          if (!voiceControls.classList.contains('hidden') && voiceModal.style.display === 'flex') {
+             updateMicStatus('paused');
+          }
+        };
+
+        recognition.onerror = (event) => {
+          if (event.error === 'no-speech') return; // 무음 타임아웃 무시
+          console.error("Speech recognition error", event.error);
+          voiceStatus.innerText = "인식 오류: " + event.error;
+        };
+      }
+
+      // 모달 내 컨트롤 버튼 이벤트
+      btnVoiceCancel.addEventListener('click', () => {
+        if(recognition) recognition.stop();
+        voiceModal.style.display = 'none';
+        voiceModal.classList.add('hidden');
+      });
+
+      btnVoiceRetry.addEventListener('click', () => {
+        if(recognition) recognition.stop();
+        setTimeout(() => {
+          voiceTranscript.innerText = "";
+          window.accumulatedTranscript = "";
+          updateMicStatus('listening');
+          try { recognition.start(); } catch(e){}
+        }, 300);
+      });
+
+      btnVoiceFinish.addEventListener('click', () => {
+        if(recognition) recognition.stop();
+        
+        const textToProcess = voiceTranscript.innerText.trim();
+        if (textToProcess) {
+          processVoiceText(textToProcess);
+        } else {
+          voiceStatus.innerText = "입력된 음성이 없습니다 😢";
+        }
+      });
+
+      async function processVoiceText(text) {
+        voiceControls.classList.add('hidden');
+        updateMicStatus('analyzing');
+        
+        const promptText = `너는 학생의 말을 듣고 알레르기 원인 물질을 추출 및 번역하는 의료 어시스턴트야.
+현재 학생이 사용하는 언어는 ${state.lang}야.
+[규칙]
+1. 학생의 음성 인식 결과에서 알레르기 원인 물질을 추출해.
+2. 추출된 단어를 학생이 읽을 수 있는 'native'와 보건교사가 읽을 'ko'(한국어) 두 가지 버전으로 작성해.
+3. 주의: 만약 학생의 언어(${state.lang})가 'ko'라면 'native'에도 억지로 외국어로 번역하지 말고 한국어 단어 그대로 똑같이 적어!
+4. 반드시 아래와 같은 순수 JSON 배열(Array of Objects) 형태로만 반환해! 다른 말은 절대 쓰지 마. 알레르기 원인이 없으면 빈 배열 [] 반환.
+[출력 예시]
+- 학생 언어가 'ru'일 때: [{"native": "креветки", "ko": "새우"}]
+- 학생 언어가 'ko'일 때: [{"native": "새우", "ko": "새우"}]
+학생 말: "${text}"`;
+
+        try {
+          const { data, error } = await db.functions.invoke('generate-ai-summary', {
+            body: { promptText: promptText }
+          });
+          
+          if (error) throw error;
+          let aiResponse = data.choices[0].message.content;
+          
+          aiResponse = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+          const extracted = JSON.parse(aiResponse);
+          
+          if (extracted && extracted.length > 0) {
+             showExtractedCards(extracted);
+          } else {
+             voiceStatus.innerText = "알레르기를 찾지 못했어요 😢";
+             voiceTranscript.innerText = "다시 한 번 말씀해 주시겠어요?";
+             voiceControls.classList.remove('hidden');
+          }
+        } catch(e) {
+          console.error("AI Extraction Error", e);
+          voiceStatus.innerText = "분석 중 오류가 발생했습니다. 다시 시도해주세요.";
+          voiceControls.classList.remove('hidden');
+        }
+      }
+
+      function showExtractedCards(allergies) {
+        voiceStatus.innerText = "분석 완료! (터치해서 선택/해제)";
+        voiceCardsContainer.classList.remove('hidden');
+        voiceCardsGrid.innerHTML = '';
+        
+        allergies.forEach((item) => {
+           const card = document.createElement('button');
+           card.className = 'symptom-card selected';
+           card.style.margin = '0';
+           card.style.padding = '0.5rem 1rem';
+           card.style.flex = '1 1 auto';
+           
+           const displayTxt = (item.native && item.native !== item.ko) ? `${item.native} (${item.ko})` : item.ko;
+           card.innerHTML = `<span class="text">${displayTxt}</span>`;
+           
+           card.addEventListener('click', () => {
+             card.classList.toggle('selected');
+           });
+           
+           card.dataset.ko = item.ko;
+           card.dataset.native = item.native;
+           
+           voiceCardsGrid.appendChild(card);
+        });
+      }
+
+      // 최종적으로 선택된 카드들 메인 화면으로 이동
+      btnVoiceConfirm.addEventListener('click', () => {
+        const selectedCards = voiceCardsGrid.querySelectorAll('.symptom-card.selected');
+        selectedCards.forEach(card => {
+           const koName = card.dataset.ko;
+           const nativeName = card.dataset.native;
+           const displayTxt = (nativeName && nativeName !== koName) ? `${nativeName} (${koName})` : koName;
+           const key = `custom_${koName}`;
+           
+           createCustomAllergyButton(key, displayTxt);
+           
+           if (!state.allergies.includes(key)) {
+             state.allergies.push(key);
+           }
+        });
+        
+        saveState(state);
+        checkComplete();
+        voiceModal.style.display = 'none';
+        voiceModal.classList.add('hidden');
+      });
+
+      // 동적 버튼 생성 헬퍼 함수
+      function createCustomAllergyButton(key, displayText) {
+        let existingBtn = document.querySelector(`[data-allergy="${key}"]`);
+        if (!existingBtn) {
+          existingBtn = document.createElement('button');
+          existingBtn.className = 'symptom-card selected';
+          existingBtn.dataset.allergy = key;
+          existingBtn.innerHTML = `<span class="emoji">✨</span><span class="text">${displayText}</span>`;
+          
+          existingBtn.addEventListener('click', (e) => {
+             if (e.currentTarget.classList.contains('selected')) {
+               e.currentTarget.classList.remove('selected');
+               state.allergies = state.allergies.filter(a => a !== key);
+             } else {
+               e.currentTarget.classList.add('selected');
+               state.allergies.push(key);
+             }
+             saveState(state);
+             checkComplete();
+          });
+          
+          const grid = document.getElementById('allergy-grid');
+          grid.insertBefore(existingBtn, btnVoice);
+        } else {
+          existingBtn.classList.add('selected');
+        }
+      }
+
     });
   </script>
 </body>

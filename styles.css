@@ -34,13 +34,13 @@ body {
   overflow: hidden;
 }
 
-/* ─── Progress Bar (최상단 얇은 선) ─── */
+/* ─── Progress Bar (최상단 선) ─── */
 #progress-bar {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 4px;
+  height: 6px;
   background: var(--secondary);
   z-index: 50;
 }
@@ -50,6 +50,7 @@ body {
   background: linear-gradient(90deg, #818CF8, var(--primary));
   width: 20%;
   transition: width 0.4s ease;
+  border-radius: 0 3px 3px 0;
 }
 
 #progress-text {
@@ -107,6 +108,14 @@ header .btn {
   box-shadow: var(--shadow);
   white-space: nowrap;
   gap: 0.4rem;
+}
+
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
 }
 
 .btn-primary {
@@ -470,4 +479,61 @@ h2 {
   .label-right { right: -2.5rem; }
   .belly-label .label-text { font-size: 1rem; }
   .belly-label .label-icon { font-size: 1.2rem; }
+}
+
+/* ─── Hover effects (mouse/pointer device) ─── */
+@media (hover: hover) {
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #818CF8, var(--primary-hover));
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+  }
+  .btn-secondary:hover {
+    background-color: var(--secondary);
+    border-color: var(--primary);
+  }
+  .symptom-card:hover,
+  .quick-btn:hover,
+  .part-btn:hover {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+  }
+  .lang-btn:hover {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
+  }
+  .face-btn:hover {
+    border-color: var(--primary);
+    background-color: var(--primary-light);
+  }
+}
+
+/* ─── RTL (아랍어 등 오른쪽→왼쪽 언어 지원) ─── */
+[dir="rtl"] header {
+  flex-direction: row-reverse;
+}
+[dir="rtl"] .step-actions {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+[dir="rtl"] .speakable {
+  flex-direction: row-reverse;
+}
+[dir="rtl"] .summary-item {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+[dir="rtl"] .lang-btn .emoji {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3 {
+  text-align: right;
+}
+[dir="rtl"] .symptom-card .text,
+[dir="rtl"] .quick-btn .text {
+  direction: rtl;
 }

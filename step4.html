@@ -50,8 +50,8 @@
 
     <!-- Actions -->
     <div class="step-actions" style="margin-top: 1.5rem; text-align: center; gap: 1rem; display: flex; justify-content: center;">
-      <button id="btn-restart" class="btn btn-secondary hidden" data-i18n="btn_restart">다른 곳도 아파요</button>
-      <button id="btn-next" class="btn btn-primary hidden" data-i18n="btn_next">다음</button>
+      <button id="btn-restart" class="btn btn-secondary" data-i18n="btn_restart" disabled>다른 곳도 아파요</button>
+      <button id="btn-next" class="btn btn-primary" data-i18n="btn_next" disabled>다음</button>
     </div>
   </section>
 
@@ -117,13 +117,9 @@
             if (!box.querySelector('.selected')) traumaComplete = false;
         });
         
-        if (timeComplete && followUpComplete && traumaComplete) {
-          btnNext.classList.remove('hidden');
-          btnRestart.classList.remove('hidden');
-        } else {
-          btnNext.classList.add('hidden');
-          btnRestart.classList.add('hidden');
-        }
+        const allDone = timeComplete && followUpComplete && traumaComplete;
+        btnNext.disabled = !allDone;
+        btnRestart.disabled = !allDone;
       }
 
       allSymptoms.forEach(item => {
@@ -184,6 +180,23 @@
       });
       
       applyLanguageToUI();
+
+      // Trauma cause buttons
+      document.querySelectorAll('.follow-up-box').forEach(box => {
+        const rIdx = box.dataset.recordIndex;
+        const symptom = box.dataset.symptom;
+        box.querySelectorAll('[data-trauma]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            box.querySelectorAll('[data-trauma]').forEach(b => b.classList.remove('selected'));
+            e.currentTarget.classList.add('selected');
+            const traumaKey = e.currentTarget.dataset.trauma;
+            state.records[rIdx].traumaCauses = state.records[rIdx].traumaCauses || {};
+            state.records[rIdx].traumaCauses[symptom] = translations.ko[traumaKey] || traumaKey;
+            saveState(state);
+            checkCompletion();
+          });
+        });
+      });
 
       document.querySelectorAll('.time-grid').forEach(tg => {
         const symptom = tg.dataset.symptom;

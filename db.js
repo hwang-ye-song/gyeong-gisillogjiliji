@@ -39,7 +39,7 @@ async function processSyncQueue() {
         allergyText = "";
         const allergies = record.entries_json[0] && record.entries_json[0].allergies;
         if (allergies && allergies.length > 0 && !allergies.includes('allergy_none')) {
-          const allergyMap = { "allergy_drug": "약", "allergy_peanut": "땅콩/견과류", "allergy_milk": "우유", "allergy_egg": "계란", "allergy_seafood": "해산물", "allergy_peach": "복숭아", "allergy_wheat": "밀가루" };
+          const allergyMap = { "allergy_drug": "약", "allergy_peanut": "땅콩/견과류", "allergy_milk": "우유", "allergy_egg": "계란", "allergy_seafood": "해산물", "allergy_peach": "복숭아", "allergy_wheat": "밀가루", "allergy_idk": "잘 모르겠음(확인 필요)" };
           allergyText = `\n[알레르기 정보]: ${allergies.map(a => a.startsWith('custom_') ? a.substring(7) : (allergyMap[a] || a)).join(', ')}`;
         }
 

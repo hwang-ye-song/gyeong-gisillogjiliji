@@ -36,6 +36,7 @@
         <button class="symptom-card" data-allergy="allergy_seafood"><span class="emoji">🦐</span><span class="text" data-i18n="allergy_seafood">해산물</span></button>
         <button class="symptom-card" data-allergy="allergy_peach"><span class="emoji">🍑</span><span class="text" data-i18n="allergy_peach">복숭아</span></button>
         <button class="symptom-card" data-allergy="allergy_wheat"><span class="emoji">🌾</span><span class="text" data-i18n="allergy_wheat">밀가루</span></button>
+        <button class="symptom-card" data-allergy="allergy_idk"><span class="emoji">🤷</span><span class="text" data-i18n="med_idk">잘 모르겠어요</span></button>
 
         <button class="symptom-card" id="btn-voice-allergy"><span class="emoji">🎤</span><span class="text" data-i18n="allergy_voice">기타(직접 말하기)</span></button>
       </div>
@@ -117,6 +118,15 @@
         }
       });
 
+      // '없어요'·'잘 모르겠어요'는 다른 알레르기와 함께 고를 수 없음
+      function clearExclusiveAllergy() {
+        ['allergy_none', 'allergy_idk'].forEach(k => {
+          const b = document.querySelector(`[data-allergy="${k}"]`);
+          if (b) b.classList.remove('selected');
+        });
+        state.allergies = state.allergies.filter(a => a !== 'allergy_none' && a !== 'allergy_idk');
+      }
+
       function checkComplete() {
         const hasAllergy = document.querySelector('#allergy-grid .symptom-card.selected');
         const hasMed = document.querySelector('#medication-grid .symptom-card.selected');
@@ -136,14 +146,12 @@
           const key = e.currentTarget.dataset.allergy;
           if (!key) return; // '기타' 버튼 등 data-allergy가 없는 요소 무시
 
-          if (key === 'allergy_none') {
+          if (key === 'allergy_none' || key === 'allergy_idk') {
             document.querySelectorAll('#allergy-grid .symptom-card').forEach(b => b.classList.remove('selected'));
             e.currentTarget.classList.add('selected');
-            state.allergies = ['allergy_none'];
+            state.allergies = [key];
           } else {
-            const noneBtn = document.querySelector('[data-allergy="allergy_none"]');
-            if (noneBtn) noneBtn.classList.remove('selected');
-            state.allergies = state.allergies.filter(a => a !== 'allergy_none');
+            clearExclusiveAllergy();
             
             if (e.currentTarget.classList.contains('selected')) {
               e.currentTarget.classList.remove('selected');
@@ -234,12 +242,8 @@
       btnVoice.addEventListener('click', (e) => {
         e.preventDefault();
         
-        // "없어요" 가 선택되어 있다면 해제
-        const noneBtn = document.querySelector('[data-allergy="allergy_none"]');
-        if (noneBtn && noneBtn.classList.contains('selected')) {
-           noneBtn.classList.remove('selected');
-           state.allergies = state.allergies.filter(a => a !== 'allergy_none');
-        }
+        // "없어요" / "잘 모르겠어요" 가 선택되어 있다면 해제
+        clearExclusiveAllergy();
 
         if (!recognition) return;
 
@@ -430,6 +434,7 @@
                e.currentTarget.classList.remove('selected');
                state.allergies = state.allergies.filter(a => a !== key);
              } else {
+               clearExclusiveAllergy();
                e.currentTarget.classList.add('selected');
                state.allergies.push(key);
              }

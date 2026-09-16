@@ -56,7 +56,7 @@ const translations = {
       state_1: "피가 나요", state_2: "부었어요", state_3: "멍들었어요", state_4: "움직이면 아파요",
       head_q: "어지럽거나 토할 것 같아요?", yes: "네", no: "아니요",      follow_belly: "밥을 먹었어요?", follow_fever: "약을 먹었어요?", follow_vomit: "몇 번 토했어요?",
       vomit_1: "1번", vomit_2: "2번", vomit_3: "3번 이상",
-      allergy_title: "알레르기가 있어요?", allergy_none: "없어요", allergy_drug: "약", allergy_peanut: "땅콩/견과류", allergy_milk: "우유", allergy_egg: "계란", allergy_seafood: "해산물", allergy_peach: "복숭아", allergy_wheat: "밀가루",        med_title: "먹고 있는 약이 있나요?", med_none: "안 먹어요", med_cold: "감기약", med_pain: "아픔약", med_digest: "배탈약", med_hospital: "병원에서 받은 약", med_idk: "잘 모르겠어요", summary_med_info: "💊 복용 중인 약", summary_med_label: "복용 약",
+      allergy_title: "알레르기가 있어요?", allergy_none: "없어요", allergy_drug: "약", allergy_peanut: "땅콩/견과류", allergy_milk: "우유", allergy_egg: "계란", allergy_seafood: "해산물", allergy_peach: "복숭아", allergy_wheat: "밀가루", allergy_idk: "잘 모르겠어요",        med_title: "먹고 있는 약이 있나요?", med_none: "안 먹어요", med_cold: "감기약", med_pain: "아픔약", med_digest: "배탈약", med_hospital: "병원에서 받은 약", med_idk: "잘 모르겠어요", summary_med_info: "💊 복용 중인 약", summary_med_label: "복용 약",
       
         allergy_voice: "직접 말할게요",
       nurse_mode: "보건교사 모드", pin_prompt: "비밀번호를 입력하세요:", no_records: "접수된 문진표가 없습니다.", delete: "삭제", summary_title: "AI 요약 내용", error_api: "요약을 만들다가 오류가 났어요.",

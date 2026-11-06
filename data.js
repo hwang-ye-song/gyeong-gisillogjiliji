@@ -48,7 +48,7 @@ const translations = {
       part_head: "머리", part_eye: "눈", part_ear: "귀", part_nose: "코", part_mouth: "입·이", part_neck: "목",
       part_chest: "가슴", part_belly: "배", part_arm: "팔·손", part_leg: "다리·발", part_back: "등·허리", part_skin: "피부", part_whole: "몸 전체",
       side_select_arm: "어느 쪽 팔이에요?", side_select_leg: "어느 쪽 다리예요?", side_left: "왼쪽", side_right: "오른쪽", side_both: "양쪽 다",
-      belly_top: "윗배", belly_navel: "배꼽 주변", belly_bottom: "아랫배", belly_right_bottom: "오른쪽 아래",
+      belly_top: "윗배", belly_navel: "배꼽 주변", belly_bottom: "아랫배",
       arm_upper: "어깨·윗팔", arm_lower: "팔꿈치·아랫팔", arm_hand: "손·손목",
       leg_thigh: "허벅지", leg_knee: "무릎", leg_calf: "종아리·발목", leg_foot: "발",
       hurt_how: "어떻게 다쳤어요?", hurt_state: "지금 상태는요?",
@@ -56,7 +56,7 @@ const translations = {
       state_1: "피가 나요", state_2: "부었어요", state_3: "멍들었어요", state_4: "움직이면 아파요",
       head_q: "어지럽거나 토할 것 같아요?", yes: "네", no: "아니요",      follow_belly: "밥을 먹었어요?", follow_fever: "약을 먹었어요?", follow_vomit: "몇 번 토했어요?",
       vomit_1: "1번", vomit_2: "2번", vomit_3: "3번 이상",
-      allergy_title: "알레르기가 있어요?", allergy_none: "없어요", allergy_drug: "약", allergy_peanut: "땅콩/견과류", allergy_milk: "우유", allergy_egg: "계란", allergy_seafood: "해산물", allergy_peach: "복숭아", allergy_wheat: "밀가루",        med_title: "먹고 있는 약이 있나요?", med_none: "안 먹어요", med_cold: "감기약", med_pain: "아픔약", med_digest: "배탈약", med_hospital: "병원에서 받은 약", med_idk: "잘 모르겠어요", summary_med_info: "💊 복용 중인 약", summary_med_label: "복용 약",
+      allergy_title: "알레르기가 있어요?", allergy_none: "없어요", allergy_drug: "약", allergy_peanut: "땅콩/견과류", allergy_milk: "우유", allergy_egg: "계란", allergy_seafood: "해산물", allergy_peach: "복숭아", allergy_wheat: "밀가루", allergy_idk: "잘 모르겠어요",        med_title: "먹고 있는 약이 있나요?", med_none: "안 먹어요", med_cold: "감기약", med_pain: "아픔약", med_digest: "배탈약", med_hospital: "병원에서 받은 약", med_idk: "잘 모르겠어요", summary_med_info: "💊 복용 중인 약", summary_med_label: "복용 약",
       
         allergy_voice: "직접 말할게요",
       nurse_mode: "보건교사 모드", pin_prompt: "비밀번호를 입력하세요:", no_records: "접수된 문진표가 없습니다.", delete: "삭제", summary_title: "AI 요약 내용", error_api: "요약을 만들다가 오류가 났어요.",
@@ -1287,6 +1287,24 @@ const translations = {
         belly_chest: "الصدر", profile_title: "أدخل بياناتك", profile_grade: "الصف", profile_class: "الفصل", profile_number: "الرقم", profile_name: "الاسم", profile_placeholder: "اكتب", profile_next: "التالي"
     },
   };
+
+  // 나중에 추가된 화면 문구 (확인 버튼, 알레르기 음성 입력, 알레르기 '잘 모르겠어요')
+  // ⚠️ km/th/mn/uz/ar 등은 원어민 검수 전 번역이므로 검수 후 고칠 것
+  const extraTranslations = {
+    ko: { allergy_idk: "잘 모르겠어요", btn_confirm: "확인 ✔️", btn_cancel: "취소", voice_listening: "마이크에 대고 말해 주세요...", voice_paused: "마이크가 기다리고 있어요.", voice_paused_hint: "(다 말했으면 [✅ 말하기 완료]를 누르세요)", voice_analyzing: "AI가 분석 중이에요... 🤖", voice_confirm_q: "아래 알레르기가 맞나요? (터치해서 선택/해제)", voice_add: "선택한 항목 추가하기", voice_finish: "말하기 완료", voice_retry: "다시 말하기", voice_error: "인식 오류: ", voice_empty: "들린 말이 없어요 😢", voice_not_found: "알레르기를 찾지 못했어요 😢", voice_again: "다시 한 번 말해 줄래요?", voice_fail: "오류가 났어요. 다시 해 주세요.", voice_done: "분석 완료! (터치해서 선택/해제)" },
+    en: { allergy_idk: "I don't know", btn_confirm: "OK ✔️", btn_cancel: "Cancel", voice_listening: "Please speak into the microphone...", voice_paused: "The microphone is waiting.", voice_paused_hint: "(When you are done, press [✅ Done speaking])", voice_analyzing: "AI is checking... 🤖", voice_confirm_q: "Are these your allergies? (Tap to select/unselect)", voice_add: "Add selected items", voice_finish: "Done speaking", voice_retry: "Speak again", voice_error: "Recognition error: ", voice_empty: "I didn't hear anything 😢", voice_not_found: "No allergies found 😢", voice_again: "Can you say it one more time?", voice_fail: "Something went wrong. Please try again.", voice_done: "Done! (Tap to select/unselect)" },
+    zh: { allergy_idk: "不知道", btn_confirm: "确认 ✔️", btn_cancel: "取消", voice_listening: "请对着麦克风说话...", voice_paused: "麦克风在等待中。", voice_paused_hint: "(说完后请按 [✅ 说完了])", voice_analyzing: "AI正在分析... 🤖", voice_confirm_q: "下面是你的过敏吗？(点击选择/取消)", voice_add: "添加选中的项目", voice_finish: "说完了", voice_retry: "重新说", voice_error: "识别错误: ", voice_empty: "没有听到声音 😢", voice_not_found: "没有找到过敏 😢", voice_again: "能再说一遍吗？", voice_fail: "出错了，请再试一次。", voice_done: "分析完成！(点击选择/取消)" },
+    ru: { allergy_idk: "Не знаю", btn_confirm: "OK ✔️", btn_cancel: "Отмена", voice_listening: "Говори в микрофон...", voice_paused: "Микрофон ждёт.", voice_paused_hint: "(Когда закончишь, нажми [✅ Готово])", voice_analyzing: "ИИ проверяет... 🤖", voice_confirm_q: "Это твоя аллергия? (Нажми, чтобы выбрать/убрать)", voice_add: "Добавить выбранное", voice_finish: "Готово", voice_retry: "Сказать ещё раз", voice_error: "Ошибка распознавания: ", voice_empty: "Ничего не слышно 😢", voice_not_found: "Аллергия не найдена 😢", voice_again: "Можешь сказать ещё раз?", voice_fail: "Произошла ошибка. Попробуй ещё раз.", voice_done: "Готово! (Нажми, чтобы выбрать/убрать)" },
+    vi: { allergy_idk: "Không biết", btn_confirm: "Xác nhận ✔️", btn_cancel: "Hủy", voice_listening: "Hãy nói vào micro...", voice_paused: "Micro đang chờ.", voice_paused_hint: "(Nói xong thì bấm [✅ Nói xong])", voice_analyzing: "AI đang phân tích... 🤖", voice_confirm_q: "Đây có phải là dị ứng của em không? (Chạm để chọn/bỏ chọn)", voice_add: "Thêm mục đã chọn", voice_finish: "Nói xong", voice_retry: "Nói lại", voice_error: "Lỗi nhận dạng: ", voice_empty: "Không nghe thấy gì 😢", voice_not_found: "Không tìm thấy dị ứng 😢", voice_again: "Em nói lại một lần nữa được không?", voice_fail: "Có lỗi xảy ra. Hãy thử lại.", voice_done: "Xong! (Chạm để chọn/bỏ chọn)" },
+    ja: { allergy_idk: "わからない", btn_confirm: "OK ✔️", btn_cancel: "やめる", voice_listening: "マイクにむかって話してね...", voice_paused: "マイクがまっています。", voice_paused_hint: "(話しおわったら [✅ 話しおわった] をおしてね)", voice_analyzing: "AIがしらべています... 🤖", voice_confirm_q: "このアレルギーであってる? (タッチしてえらぶ/けす)", voice_add: "えらんだものをついか", voice_finish: "話しおわった", voice_retry: "もう一回話す", voice_error: "にんしきエラー: ", voice_empty: "声がきこえなかったよ 😢", voice_not_found: "アレルギーが見つからなかったよ 😢", voice_again: "もう一回言ってくれる?", voice_fail: "エラーがおきました。もう一回やってね。", voice_done: "できた! (タッチしてえらぶ/けす)" },
+    tl: { allergy_idk: "Hindi ko alam", btn_confirm: "OK ✔️", btn_cancel: "Kanselahin", voice_listening: "Magsalita sa mikropono...", voice_paused: "Naghihintay ang mikropono.", voice_paused_hint: "(Kapag tapos na, pindutin ang [✅ Tapos na])", voice_analyzing: "Sinusuri ng AI... 🤖", voice_confirm_q: "Ito ba ang allergy mo? (Pindutin para piliin/alisin)", voice_add: "Idagdag ang napili", voice_finish: "Tapos na", voice_retry: "Magsalita ulit", voice_error: "Error sa pagkilala: ", voice_empty: "Walang narinig 😢", voice_not_found: "Walang nakitang allergy 😢", voice_again: "Puwede mo bang ulitin?", voice_fail: "May error. Subukan ulit.", voice_done: "Tapos! (Pindutin para piliin/alisin)" },
+    km: { allergy_idk: "ខ្ញុំមិនដឹងទេ", btn_confirm: "យល់ព្រម ✔️", btn_cancel: "បោះបង់", voice_listening: "សូមនិយាយចូលមីក្រូហ្វូន...", voice_paused: "មីក្រូហ្វូនកំពុងរង់ចាំ។", voice_paused_hint: "(និយាយចប់ហើយ សូមចុច [✅ និយាយចប់])", voice_analyzing: "AI កំពុងពិនិត្យ... 🤖", voice_confirm_q: "តើនេះជាអាឡែស៊ីរបស់អ្នកមែនទេ? (ចុចដើម្បីជ្រើស/ដកចេញ)", voice_add: "បន្ថែមអ្វីដែលបានជ្រើស", voice_finish: "និយាយចប់", voice_retry: "និយាយម្តងទៀត", voice_error: "កំហុសក្នុងការស្គាល់សំឡេង: ", voice_empty: "មិនឮអ្វីទេ 😢", voice_not_found: "រកមិនឃើញអាឡែស៊ីទេ 😢", voice_again: "តើអាចនិយាយម្តងទៀតបានទេ?", voice_fail: "មានបញ្ហា។ សូមព្យាយាមម្តងទៀត។", voice_done: "រួចរាល់! (ចុចដើម្បីជ្រើស/ដកចេញ)" },
+    th: { allergy_idk: "ไม่รู้", btn_confirm: "ตกลง ✔️", btn_cancel: "ยกเลิก", voice_listening: "พูดใส่ไมโครโฟนได้เลย...", voice_paused: "ไมโครโฟนกำลังรอ", voice_paused_hint: "(พูดเสร็จแล้วกด [✅ พูดเสร็จแล้ว])", voice_analyzing: "AI กำลังตรวจสอบ... 🤖", voice_confirm_q: "นี่คือสิ่งที่แพ้ใช่ไหม? (แตะเพื่อเลือก/ยกเลิก)", voice_add: "เพิ่มรายการที่เลือก", voice_finish: "พูดเสร็จแล้ว", voice_retry: "พูดอีกครั้ง", voice_error: "จดจำเสียงผิดพลาด: ", voice_empty: "ไม่ได้ยินเสียง 😢", voice_not_found: "ไม่พบอาการแพ้ 😢", voice_again: "พูดอีกครั้งได้ไหม?", voice_fail: "เกิดข้อผิดพลาด ลองอีกครั้งนะ", voice_done: "เสร็จแล้ว! (แตะเพื่อเลือก/ยกเลิก)" },
+    mn: { allergy_idk: "Мэдэхгүй", btn_confirm: "За ✔️", btn_cancel: "Болих", voice_listening: "Микрофон руу ярина уу...", voice_paused: "Микрофон хүлээж байна.", voice_paused_hint: "(Ярьж дуусвал [✅ Ярьж дууслаа] дарна уу)", voice_analyzing: "AI шалгаж байна... 🤖", voice_confirm_q: "Энэ таны харшил мөн үү? (Дарж сонгох/болиулах)", voice_add: "Сонгосныг нэмэх", voice_finish: "Ярьж дууслаа", voice_retry: "Дахин ярих", voice_error: "Танихад алдаа гарлаа: ", voice_empty: "Юу ч сонсогдсонгүй 😢", voice_not_found: "Харшил олдсонгүй 😢", voice_again: "Дахин нэг хэлж өгөх үү?", voice_fail: "Алдаа гарлаа. Дахин оролдоно уу.", voice_done: "Боллоо! (Дарж сонгох/болиулах)" },
+    uz: { allergy_idk: "Bilmayman", btn_confirm: "OK ✔️", btn_cancel: "Bekor qilish", voice_listening: "Mikrofonga gapiring...", voice_paused: "Mikrofon kutmoqda.", voice_paused_hint: "(Gapirib bo'lgach, [✅ Tugatdim] tugmasini bosing)", voice_analyzing: "AI tekshirmoqda... 🤖", voice_confirm_q: "Bu sizning allergiyangizmi? (Tanlash/olib tashlash uchun bosing)", voice_add: "Tanlanganlarni qo'shish", voice_finish: "Tugatdim", voice_retry: "Qayta gapirish", voice_error: "Tanishda xato: ", voice_empty: "Hech narsa eshitilmadi 😢", voice_not_found: "Allergiya topilmadi 😢", voice_again: "Yana bir marta ayta olasizmi?", voice_fail: "Xato yuz berdi. Qayta urinib ko'ring.", voice_done: "Tayyor! (Tanlash/olib tashlash uchun bosing)" },
+    ar: { allergy_idk: "لا أعرف", btn_confirm: "موافق ✔️", btn_cancel: "إلغاء", voice_listening: "تحدث في الميكروفون...", voice_paused: "الميكروفون ينتظر.", voice_paused_hint: "(عندما تنتهي، اضغط [✅ انتهيت])", voice_analyzing: "الذكاء الاصطناعي يتحقق... 🤖", voice_confirm_q: "هل هذه حساسيتك؟ (اضغط للاختيار/الإلغاء)", voice_add: "أضف ما اخترته", voice_finish: "انتهيت", voice_retry: "تحدث مرة أخرى", voice_error: "خطأ في التعرف: ", voice_empty: "لم أسمع شيئاً 😢", voice_not_found: "لم يتم العثور على حساسية 😢", voice_again: "هل يمكنك قولها مرة أخرى؟", voice_fail: "حدث خطأ. حاول مرة أخرى.", voice_done: "تم! (اضغط للاختيار/الإلغاء)" }
+  };
+  for (const l in extraTranslations) Object.assign(translations[l], extraTranslations[l]);
   
   const tts_codes = { ko: "ko-KR", en: "en-US", zh: "zh-CN", ru: "ru-RU", vi: "vi-VN", ja: "ja-JP", tl: "tl-PH", km: "km-KH", th: "th-TH", mn: "mn-MN", uz: "uz-UZ", ar: "ar-SA" };
   
@@ -1482,10 +1500,17 @@ const translations = {
       const symptomsStr = data.symptoms.map(s => s.ko || s).join(" ");
       
       const hasTraumaCause = data.traumaCauses && Object.keys(data.traumaCauses).length > 0;
-      if (data.part === "머리" && hasTraumaCause && (data.headQ === "yes" || symptomsStr.includes("토할 것 같아요") || symptomsStr.includes("어지러워요"))) {
+      // 머리를 부딪힌 경우도 외상으로 봄, headQ는 step2에서 true/false로 저장됨
+      const headTrauma = hasTraumaCause || symptomsStr.includes("부딪혔어요");
+      if (data.part === "머리" && headTrauma && (data.headQ === true || data.headQ === "yes" || symptomsStr.includes("토할 것 같아요") || symptomsStr.includes("어지러워요"))) {
         flags.add("뇌진탕 의심");
       }
-      if ((data.part === "배" || data.part === "아랫배") && (data.bellyPos === "오른쪽 아래" || (data.bellyPos && data.bellyPos.includes("right_bottom"))) && maxPain >= 8) {
+      // 여러 구역을 골라 묶인 경우에도 실제 고른 구역(areas)으로 오른쪽 아래 확인
+      const isRightBottom = (data.areas || []).includes("belly_right_bottom") || data.bellyPos === "오른쪽 아래" || (data.bellyPos && data.bellyPos.includes("right_bottom"));
+      // 이 부위의 통증만 기준 (다른 부위 통증으로 잘못 뜨지 않게)
+      const entryPains = data.painLevels ? Object.values(data.painLevels) : [data.painLevel];
+      const entryMax = Math.max(0, ...entryPains.map(p => parseInt(p) || 0));
+      if ((data.part === "배" || data.part === "아랫배") && isRightBottom && entryMax >= 8) {
         flags.add("충수염 의심");
       }
     });
@@ -1504,9 +1529,46 @@ const translations = {
   };
 
   // State Management Helpers
+  // state = { lang, visit: DB 한 줄에 들어갈 내용, current: 몸 그림에서 한 번 고른 부위(회차)를 답하는 중 }
+  function newVisit() {
+      return { grade: '', class_num: '', student_num: '', entries: [], followups: [], allergies: [], medications: [] };
+  }
+
+  // 몸 그림을 누를 때마다 새 회차 (part: 고른 부위의 한국어 이름)
+  function newRound(part) {
+      return {
+          part: part,
+          sub: { side: null, sideSelected: false, sideLabel: null, headSub: false },
+          queue: null,      // 아직 물어볼 부위 (배·팔 묶음), 없으면 step2가 하나로 만듦
+          partObj: null,    // 지금 묻는 부위
+          symptoms: [], painLevels: {}, headQ: null,
+          done: []          // 이번 회차에서 끝낸 부위 기록 (step3가 추가)
+      };
+  }
+
+  // 이번 회차를 부위 고르기부터 다시 (답하던 내용과 이번 회차에 먼저 끝낸 기록도 비움)
+  function restartRound(current) {
+      current.queue = null;
+      current.partObj = null;
+      current.symptoms = [];
+      current.painLevels = {};
+      current.headQ = null;
+      current.done = [];
+  }
+
   function getState() {
-      const defaultState = { lang: 'ko', part: null, bellyPos: null, hurtMethod: null, hurtState: null, headQ: null, symptoms: [], painLevels: {}, startTime: null, followups: [], previousEntries: [], headSubSelected: false };
-      return JSON.parse(sessionStorage.getItem('medical_state')) || defaultState;
+      let state = null;
+      try { state = JSON.parse(sessionStorage.getItem('medical_state')); } catch (e) { state = null; }
+      // 없거나 예전 형식이면 새로 시작 (언어는 유지)
+      if (!state || typeof state !== 'object' || !state.visit) {
+          return { lang: (state && state.lang) || 'ko', visit: newVisit(), current: null };
+      }
+      return state;
+  }
+
+  // 끝낸 부위 기록 전체 (앞 회차 + 이번 회차), 같은 객체를 돌려주므로 고친 뒤 saveState로 저장됨
+  function allEntries(state) {
+      return [...state.visit.entries, ...(state.current ? state.current.done : [])];
   }
 
   function saveState(state) {
@@ -1515,6 +1577,12 @@ const translations = {
 
   function clearState() {
       sessionStorage.removeItem('medical_state');
+  }
+
+  // innerHTML에 넣는 값 이스케이프 (음성/AI로 들어온 글자 등)
+  function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
   // UI Helpers
@@ -1576,6 +1644,8 @@ const translations = {
 
   // Setup Common UI (Header, Speaker)
   document.addEventListener('DOMContentLoaded', () => {
+      // 뒤로 가기로 캐시된 화면이 복원되면 새로 읽음 (이전 상태가 다시 저장되지 않게)
+      window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
       applyLanguageToUI();
       document.querySelectorAll('.btn-speaker').forEach(btn => {
           btn.addEventListener('click', (e) => {

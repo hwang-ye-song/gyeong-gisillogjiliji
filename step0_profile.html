@@ -48,6 +48,16 @@
     .form-group input:focus {
       border-color: var(--primary);
     }
+    .form-group input.invalid {
+      border-color: var(--emergency);
+      background-color: #FEF2F2;
+      animation: shake 0.3s;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
   </style>
 </head>
 <body>
@@ -65,19 +75,15 @@
       <div class="profile-form">
         <div class="form-group">
           <label data-i18n="profile_grade">학년</label>
-          <input type="number" id="input-grade" min="1" max="6" data-i18n-placeholder="profile_placeholder">
+          <input type="number" id="input-grade" min="1" inputmode="numeric" pattern="[0-9]*" data-i18n-placeholder="profile_placeholder">
         </div>
         <div class="form-group">
           <label data-i18n="profile_class">반</label>
-          <input type="number" id="input-class" min="1" max="20" data-i18n-placeholder="profile_placeholder">
+          <input type="number" id="input-class" min="1" inputmode="numeric" pattern="[0-9]*" data-i18n-placeholder="profile_placeholder">
         </div>
         <div class="form-group">
           <label data-i18n="profile_number">번호</label>
-          <input type="number" id="input-number" min="1" max="100" data-i18n-placeholder="profile_placeholder">
-        </div>
-        <div class="form-group">
-          <label data-i18n="profile_name">이름</label>
-          <input type="text" id="input-name" data-i18n-placeholder="profile_placeholder">
+          <input type="number" id="input-number" min="1" inputmode="numeric" pattern="[0-9]*" data-i18n-placeholder="profile_placeholder">
         </div>
       </div>
     </div>
@@ -89,6 +95,7 @@
     </button>
   </nav>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
   <script src="data.js"></script>
   <script src="db.js"></script>
   <script>
@@ -103,18 +110,33 @@
       });
 
       // Restore values if previously entered
-      if (state.grade) document.getElementById('input-grade').value = state.grade;
-      if (state.class_num) document.getElementById('input-class').value = state.class_num;
-      if (state.student_num) document.getElementById('input-number').value = state.student_num;
-      if (state.name) document.getElementById('input-name').value = state.name;
+      if (state.visit.grade) document.getElementById('input-grade').value = state.visit.grade;
+      if (state.visit.class_num) document.getElementById('input-class').value = state.visit.class_num;
+      if (state.visit.student_num) document.getElementById('input-number').value = state.visit.student_num;
+
+      // 입력하면 빨간 표시 해제
+      document.querySelectorAll('.form-group input').forEach(input => {
+        input.addEventListener('input', () => input.classList.remove('invalid'));
+      });
 
       document.getElementById('btn-next').addEventListener('click', () => {
+        // 비었거나 1 이상 정수가 아닌 칸은 빨갛게 표시 (언어와 상관없이 알아볼 수 있게 글 대신 색으로)
+        const inputs = ['input-grade', 'input-class', 'input-number'].map(id => document.getElementById(id));
+        const invalid = inputs.filter(input => {
+          const v = Number(input.value);
+          return input.value.trim() === '' || !Number.isInteger(v) || v < 1;
+        });
+        inputs.forEach(input => input.classList.toggle('invalid', invalid.includes(input)));
+        if (invalid.length > 0) {
+          invalid[0].focus();
+          return;
+        }
+
         let state = getState();
-        state.grade = document.getElementById('input-grade').value;
-        state.class_num = document.getElementById('input-class').value;
-        state.student_num = document.getElementById('input-number').value;
-        state.name = document.getElementById('input-name').value;
-        
+        state.visit.grade = document.getElementById('input-grade').value;
+        state.visit.class_num = document.getElementById('input-class').value;
+        state.visit.student_num = document.getElementById('input-number').value;
+
         saveState(state);
         window.location.href = 'step1.html';
       });

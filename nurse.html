@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>보건교사 대시보드 - 그림 터치 문진표</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
   <style>
     body {
       background-color: #F3F4F6;
@@ -171,7 +171,191 @@
       background: var(--secondary);
       color: var(--text-main);
     }
+
+    /* ─── 관리 학생 (목록은 이 PC 브라우저에만 저장) ─── */
+    .care-badge {
+      display: inline-block;
+      margin: 0.25rem 0;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      background: #FFF7ED;
+      border: 1px solid #FDBA74;
+      color: #9A3412;
+      font-size: 0.9rem;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+    /* 배지 글이 길어도 '확인 완료' 버튼은 줄어들지 않게 */
+    .record-header .btn-resolve {
+      flex-shrink: 0;
+      white-space: nowrap;
+      margin-left: 0.75rem;
+    }
+    .care-modal {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background: rgba(17, 24, 39, 0.45);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+      overflow-y: auto;
+      z-index: 100;
+    }
+    .care-modal[hidden] { display: none; }
+    .care-panel {
+      background: #FFFFFF;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 760px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .care-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .care-head h2 {
+      font-size: 1.25rem;
+      color: var(--primary);
+      outline: none;
+    }
+    .care-notice {
+      background: var(--primary-light);
+      color: var(--primary-hover);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+    .care-warn {
+      background: #FFF7ED;
+      border: 1px solid #FDBA74;
+      color: #9A3412;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    .care-warn:empty, .care-msg:empty { display: none; }
+    .care-section {
+      border-top: 1px solid var(--secondary);
+      padding-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .care-section h3 { font-size: 1rem; }
+    .care-label { font-size: 0.95rem; color: var(--text-sub); }
+    .care-sub { color: var(--text-sub); font-size: 0.9rem; }
+    .care-panel textarea,
+    .care-panel input[type="text"] {
+      width: 100%;
+      padding: 0.55rem 0.7rem;
+      border: 1.5px solid var(--secondary);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: var(--text-main);
+      background: #FFFFFF;
+    }
+    .care-panel textarea { min-height: 7rem; resize: vertical; }
+    .care-panel textarea:focus,
+    .care-panel input[type="text"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .care-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .care-btn { padding: 0.45rem 1rem; font-size: 0.95rem; }
+    .care-btn-danger { background: #FEE2E2; color: #B91C1C; border: 1.5px solid #FCA5A5; }
+    .care-btn-danger:hover { background: #FECACA; }
+    .care-form {
+      display: grid;
+      grid-template-columns: 5rem 5rem 5rem 1fr auto;
+      gap: 0.5rem;
+      align-items: end;
+    }
+    .care-form label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.9rem;
+      color: var(--text-sub);
+    }
+    .care-confirm {
+      background: #FFFBEB;
+      border: 1px solid #FCD34D;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .care-msg { font-size: 0.9rem; white-space: pre-line; }
+    .care-msg.ok { color: #047857; }
+    .care-msg.err { color: #B91C1C; }
+    .care-table-wrap {
+      max-height: 45vh;
+      overflow: auto;
+      border: 1px solid var(--secondary);
+      border-radius: 8px;
+    }
+    .care-table-wrap[hidden] { display: none; }
+    .care-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    .care-table th,
+    .care-table td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--secondary);
+      text-align: left;
+      vertical-align: top;
+    }
+    .care-table th {
+      position: sticky;
+      top: 0;
+      background: #F9FAFB;
+      color: var(--text-sub);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .care-table td.num { white-space: nowrap; }
+    .care-table td.note { width: 100%; overflow-wrap: anywhere; }
+    .care-del {
+      background: #FEE2E2;
+      color: #DC2626;
+      border: none;
+      padding: 0.4rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .care-sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+    @media (max-width: 640px) {
+      .care-modal { padding: 1rem; }
+      .care-panel { padding: 1rem; }
+      .care-form { grid-template-columns: repeat(3, 1fr); }
+      .care-form .care-note-field,
+      .care-form button { grid-column: 1 / -1; }
+    }
+
     @media (max-width: 768px) {
+      .dashboard-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
       .dashboard-content {
         flex-direction: column;
         overflow-y: auto;
@@ -193,6 +377,7 @@
   <header class="dashboard-header">
     <h1>🏥 보건교사 대시보드</h1>
     <div>
+      <button id="btn-care" class="btn btn-secondary" aria-haspopup="dialog" style="min-height: auto; padding: 0.5rem 1rem; font-size: 1rem; margin-right: 0.5rem;">관리 학생 (0)</button>
       <button id="btn-refresh" class="btn btn-secondary" style="min-height: auto; padding: 0.5rem 1rem; font-size: 1rem;">새로고침</button>
       <button id="btn-exit" class="btn btn-secondary" style="min-height: auto; padding: 0.5rem 1rem; font-size: 1rem; margin-left: 0.5rem;">나가기</button>
     </div>
@@ -201,7 +386,7 @@
   <div class="dashboard-content">
     <aside class="sidebar">
       <div class="stat-card">
-        <h3>오늘 접수된 학생</h3>
+        <h3>확인 대기 학생</h3>
         <div class="value" id="stat-total">0</div>
       </div>
       <div class="stat-card">
@@ -223,8 +408,98 @@
     </main>
   </div>
 
+  <!-- 관리 학생 패널: 목록은 이 PC 브라우저(localStorage)에만 저장, 서버로 보내지 않음 -->
+  <!-- spellcheck·translate 끔: 입력한 건강 정보가 맞춤법·번역 서비스로 나가지 않게 (안쪽 요소에 이어짐) -->
+  <div id="care-modal" class="care-modal" hidden>
+    <div class="care-panel" role="dialog" aria-modal="true" aria-labelledby="care-title" spellcheck="false" translate="no">
+      <div class="care-head">
+        <h2 id="care-title" tabindex="-1">관리 학생 목록</h2>
+        <button type="button" id="care-close" class="btn btn-secondary care-btn">닫기</button>
+      </div>
+      <p class="care-notice">이 목록은 이 PC 브라우저에만 저장되고 서버로 보내지지 않아요. 학년이 바뀌는 3월에 새로 등록해 주세요. 학생이 쓰는 태블릿에서는 등록하지 마세요.</p>
+      <p id="care-device-warn" class="care-warn" role="status"></p>
+      <p id="care-warning" class="care-warn" role="status"></p>
+
+      <section class="care-section">
+        <h3>붙여넣어 등록</h3>
+        <label for="care-paste" class="care-label">엑셀에서 학년·반·번호·내용 4칸을 복사해 붙여넣으세요 (제목 줄까지 복사하면 연번·이름 칸은 빼고 읽어요)</label>
+        <textarea id="care-paste" rows="5" spellcheck="false" placeholder="예) 3  2  15  천식 (흡입기 보건실 보관)"></textarea>
+        <div class="care-actions">
+          <button type="button" id="care-paste-add" class="btn btn-primary care-btn">추가</button>
+          <button type="button" id="care-paste-replace" class="btn btn-secondary care-btn">전부 바꾸기</button>
+        </div>
+        <div id="care-paste-confirm"></div>
+        <p id="care-paste-msg" class="care-msg" role="status"></p>
+      </section>
+
+      <section class="care-section">
+        <h3>직접 추가</h3>
+        <form id="care-form" class="care-form" autocomplete="off" novalidate>
+          <label>학년<input type="text" id="care-grade" inputmode="numeric" maxlength="6"></label>
+          <label>반<input type="text" id="care-class" inputmode="numeric" maxlength="6"></label>
+          <label>번호<input type="text" id="care-num" inputmode="numeric" maxlength="6"></label>
+          <label class="care-note-field">내용<input type="text" id="care-note" maxlength="100" placeholder="예) 천식 (흡입기 보건실 보관)"></label>
+          <button type="submit" class="btn btn-primary care-btn">추가</button>
+        </form>
+        <div id="care-form-confirm"></div>
+        <p id="care-form-msg" class="care-msg" role="status"></p>
+      </section>
+
+      <section class="care-section">
+        <h3>현재 목록 <span id="care-list-count"></span></h3>
+        <p id="care-updated" class="care-sub"></p>
+        <p id="care-stale" class="care-warn"></p>
+        <div id="care-table-wrap" class="care-table-wrap">
+          <table class="care-table">
+            <thead>
+              <tr><th>학년</th><th>반</th><th>번호</th><th>내용</th><th><span class="care-sr">삭제</span></th></tr>
+            </thead>
+            <tbody id="care-tbody"></tbody>
+          </table>
+        </div>
+        <p id="care-empty" class="care-sub">등록된 학생이 없어요.</p>
+        <p id="care-list-msg" class="care-msg" role="status"></p>
+      </section>
+
+      <section class="care-section">
+        <h3>다른 PC로 옮기기</h3>
+        <div class="care-actions">
+          <button type="button" id="care-export" class="btn btn-secondary care-btn">파일로 내보내기</button>
+          <button type="button" id="care-import" class="btn btn-secondary care-btn">파일 불러오기</button>
+          <input type="file" id="care-file" accept=".json,application/json" hidden>
+        </div>
+        <div id="care-file-confirm"></div>
+        <p id="care-file-msg" class="care-msg" role="status"></p>
+      </section>
+
+      <section class="care-section">
+        <div class="care-actions">
+          <button type="button" id="care-clear" class="btn care-btn care-btn-danger">목록 비우기</button>
+        </div>
+        <div id="care-clear-confirm"></div>
+        <p id="care-clear-msg" class="care-msg" role="status"></p>
+      </section>
+    </div>
+  </div>
+
   <script src="db.js"></script>
   <script>
+    // innerHTML에 넣는 값 이스케이프 (이 페이지는 data.js를 불러오지 않아 따로 정의)
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    let fetchSeq = 0;         // 마지막 요청 번호 (늦게 도착한 이전 응답은 버림)
+    let hasRendered = false;  // 목록을 한 번이라도 그렸는지
+    let lastUpdatedText = '';
+    let realtimeDown = false;
+    let lastRecords = null;   // 마지막으로 받은 기록 (관리 학생 목록이 바뀌면 이걸로 다시 그림)
+
+    function updateStatusLine() {
+      document.getElementById('last-updated').innerText = lastUpdatedText + (realtimeDown ? ' · 실시간 연결 끊김 (자동 재시도 중)' : '');
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('btn-exit').addEventListener('click', () => {
         window.location.href = 'index.html';
@@ -234,7 +509,26 @@
         fetchRecords();
       });
 
+      // 관리 학생 패널 (여기서 오류가 나도 문진표 목록은 그대로 동작)
+      try {
+        initCare();
+      } catch (err) {
+        console.error("Care init error:", err && err.message);
+      }
+
+      // 확인 완료 버튼 (목록을 다시 그려도 한 번만 등록)
+      document.getElementById('records-container').addEventListener('click', (e) => {
+        const btn = e.target.closest('.btn-resolve');
+        if (btn) resolveRecord(btn.dataset.id);
+      });
+
       fetchRecords();
+
+      // 실시간 연결이 조용히 끊겨도 1분마다·네트워크가 돌아오면 다시 불러옴
+      setInterval(fetchRecords, 60000);
+      window.addEventListener('online', fetchRecords);
+
+      if (!db) return;
 
       // Realtime subscription setup
       const channel = db.channel('schema-db-changes')
@@ -245,15 +539,35 @@
             schema: 'public',
             table: 'surveys'
           },
-          (payload) => {
-            console.log("New record received!", payload);
+          () => {
+            console.log("New record received!");
             fetchRecords();
           }
         )
-        .subscribe();
+        // 다른 화면에서 확인 완료한 기록은 바로 사라지고, 서버가 채운 AI 요약은 바로 보이게
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'surveys'
+          },
+          () => fetchRecords()
+        )
+        .subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            realtimeDown = false;
+            fetchRecords(); // (재)연결될 때마다 끊긴 동안 들어온 기록을 다시 불러옴
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            console.error("Realtime status:", status, err && err.message);
+            realtimeDown = true;
+            updateStatusLine();
+          }
+        });
     });
 
     async function fetchRecords() {
+      const seq = ++fetchSeq;
       try {
         const { data, error } = await db
           .from('surveys')
@@ -262,13 +576,23 @@
           .order('created_at', { ascending: false });
 
         if (error) throw error;
+        if (seq !== fetchSeq) return; // 더 최근 요청이 있으면 이 응답은 버림
         renderRecords(data);
+        hasRendered = true;
       } catch (err) {
+        if (seq !== fetchSeq) return;
         console.error("Fetch error:", err);
+        const msg = err && err.message ? err.message : String(err);
+        if (hasRendered) {
+          // 이미 보이는 목록(응급 포함)은 지우지 않고 상단에만 표시
+          lastUpdatedText = `갱신 실패 (${new Date().toLocaleTimeString()}): ${msg}`;
+          updateStatusLine();
+          return;
+        }
         document.getElementById('records-container').innerHTML = `
           <div style="text-align: center; padding: 3rem; color: var(--emergency);">
             데이터를 불러오는 중 오류가 발생했습니다.<br>
-            ${err.message}
+            ${escapeHtml(msg)}
           </div>
         `;
       }
@@ -277,11 +601,14 @@
     async function resolveRecord(id) {
       if (!confirm("이 문진표를 확인 완료(숨김) 처리하시겠습니까?")) return;
       try {
-        const { error } = await db
+        const { data, error } = await db
           .from('surveys')
           .update({ is_resolved: true })
-          .eq('id', id);
+          .eq('id', id)
+          .select('id');
         if (error) throw error;
+        // 오류 없이 0건이면 권한(RLS) 등으로 실제로 바뀌지 않은 것
+        if (!data || data.length === 0) alert("확인 완료 처리가 저장되지 않았습니다. 권한이 없거나 이미 처리된 문진표일 수 있습니다.");
         fetchRecords();
       } catch (err) {
         console.error("Update error:", err);
@@ -289,12 +616,17 @@
       }
     }
 
-    function renderRecords(records) {
+    // isRerender: 관리 학생 목록만 바뀌어 다시 그릴 때 (업데이트 시각은 그대로)
+    function renderRecords(records, isRerender) {
       const container = document.getElementById('records-container');
-      document.getElementById('last-updated').innerText = `최근 업데이트: ${new Date().toLocaleTimeString()}`;
-      
+      lastRecords = records;
+      if (!isRerender) {
+        lastUpdatedText = `최근 업데이트: ${new Date().toLocaleTimeString()}`;
+        updateStatusLine();
+      }
+
       document.getElementById('stat-total').innerText = records.length;
-      document.getElementById('stat-emergency').innerText = records.filter(r => r.emergency_flags && r.emergency_flags.length > 0).length;
+      document.getElementById('stat-emergency').innerText = records.filter(r => Array.isArray(r.emergency_flags) && r.emergency_flags.length > 0).length;
 
       if (records.length === 0) {
         container.innerHTML = `
@@ -305,42 +637,46 @@
         return;
       }
 
-      container.innerHTML = records.map(r => {
-        const isEmergency = r.emergency_flags && r.emergency_flags.length > 0;
+      const renderCard = (r) => {
+        const flags = Array.isArray(r.emergency_flags) ? r.emergency_flags : [];
+        const isEmergency = flags.length > 0;
         const dateStr = new Date(r.created_at).toLocaleString('ko-KR');
-        
+
         let badges = '';
         if (isEmergency) {
-          badges = r.emergency_flags.map(f => `<span class="badge emergency">🚨 ${f}</span>`).join('');
+          badges = flags.map(f => `<span class="badge emergency">🚨 ${escapeHtml(f)}</span>`).join('');
         }
-        
-        const entriesHtml = (r.entries_json || []).map((e, idx) => {
+
+        const entries = Array.isArray(r.entries_json) ? r.entries_json : [];
+        const entriesHtml = entries.map((e, idx) => {
           let symptomDisplay = "";
           if (e.symptoms && e.symptoms.length > 0) {
             symptomDisplay = e.symptoms.map(s => {
               const p = e.painLevels && e.painLevels[s] ? e.painLevels[s] : (e.painLevel || 0);
               const t = e.startTimes && e.startTimes[s] ? e.startTimes[s] : (e.startTime || "모름");
-              const tc = e.traumaCauses && e.traumaCauses[s] ? `<span style="color:#B45309; font-weight:bold; margin-left:8px;">[외상원인: ${e.traumaCauses[s]}]</span>` : '';
-              return `• <strong>${s}</strong> - 통증: <span style="color:${p >= 8 ? '#DC2626' : 'inherit'}; font-weight:bold;">${p}/10</span>, 발현 시점: ${t}${tc}`;
+              const tc = e.traumaCauses && e.traumaCauses[s] ? `<span style="color:#B45309; font-weight:bold; margin-left:8px;">[외상원인: ${escapeHtml(e.traumaCauses[s])}]</span>` : '';
+              return `• <strong>${escapeHtml(s)}</strong> - 통증: <span style="color:${p >= 8 ? '#DC2626' : 'inherit'}; font-weight:bold;">${escapeHtml(p)}/10</span>, 발현 시점: ${escapeHtml(t)}${tc}`;
             }).join('<br>');
           }
-          
+          // 위치: 새 기록은 한국어 partLabel, 예전 기록은 bellyPos 그대로
+          const posLabel = e.partLabel || e.bellyPos;
+
           return `
           <div class="entry-box ${isEmergency ? 'emergency-entry' : ''}">
-            <strong>[증상 ${idx+1}] ${e.part} ${e.bellyPos ? `(${e.bellyPos})` : ''}</strong><br>
+            <strong>[증상 ${idx+1}] ${escapeHtml(e.part)} ${posLabel ? `(${escapeHtml(posLabel)})` : ''}</strong><br>
             <div style="margin-top: 0.5rem; color: #4B5563;">
               ${symptomDisplay}<br>
-              ${(e.followups || []).map(f => `• ${f.q} <strong>${f.a}</strong><br>`).join('')}
+              ${(e.followups || []).map(f => `• ${escapeHtml(f.q)} <strong>${escapeHtml(f.a)}</strong><br>`).join('')}
             </div>
           </div>
         `}).join('');
 
 
         let medHtml = "";
-        const medications = r.entries_json && r.entries_json[0] && r.entries_json[0].medications;
+        const medications = entries[0] && entries[0].medications;
         if (medications && medications.length > 0 && !medications.includes('med_none')) {
           const medMap = { "med_cold": "감기약", "med_pain": "진통제", "med_digest": "소화제", "med_hospital": "병원/처방약", "med_idk": "잘 모르겠어요" };
-          const medLabels = medications.map(m => medMap[m] || m).join(', ');
+          const medLabels = medications.map(m => escapeHtml(medMap[m] || m)).join(', ');
           medHtml = `
             <div style="margin-top: 1rem; padding: 0.75rem; background-color: #EFF6FF; border: 1px solid #93C5FD; border-radius: 0.5rem;">
               <strong style="color: #1D4ED8;">💊 복용 약:</strong> <span style="color: #1E3A8A; font-weight: 600;">${medLabels}</span>
@@ -349,12 +685,12 @@
         }
 
         let allergyHtml = "";
-        const allergies = r.entries_json && r.entries_json[0] && r.entries_json[0].allergies;
+        const allergies = entries[0] && entries[0].allergies;
         if (allergies && allergies.length > 0 && !allergies.includes('allergy_none')) {
-          const allergyMap = { "allergy_drug": "약", "allergy_peanut": "땅콩/견과류", "allergy_milk": "우유", "allergy_egg": "계란", "allergy_seafood": "해산물", "allergy_peach": "복숭아", "allergy_wheat": "밀가루" };
+          const allergyMap = { "allergy_drug": "약", "allergy_peanut": "땅콩/견과류", "allergy_milk": "우유", "allergy_egg": "계란", "allergy_seafood": "해산물", "allergy_peach": "복숭아", "allergy_wheat": "밀가루", "allergy_idk": "잘 모르겠음(확인 필요)" };
           const allergyLabels = allergies.map(a => {
-            if (a.startsWith('custom_')) return a.substring(7);
-            return allergyMap[a] || a;
+            if (a.startsWith('custom_')) return escapeHtml(a.substring(7));
+            return escapeHtml(allergyMap[a] || a);
           }).join(', ');
           allergyHtml = `
             <div style="margin-top: 1rem; padding: 0.75rem; background-color: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 0.5rem;">
@@ -363,22 +699,34 @@
           `;
         }
 
-        const studentInfoStr = `${r.grade || '?'}학년 ${r.class_num || '?'}반 ${r.student_num || '?'}번 ${r.student_name || '이름없음'}`;
+        // AI 요약은 저장 뒤 서버가 채움 (채워지면 UPDATE 알림으로 다시 불러와 보임)
+        const summaryHtml = r.ai_summary && String(r.ai_summary).trim()
+          ? escapeHtml(r.ai_summary).replace(/\n/g, '<br>')
+          : '<span style="color: var(--text-sub); font-weight: normal;">AI 요약 생성 중… (1분이 지나도 안 보이면 아래 기록을 직접 확인하세요)</span>';
+
+        const studentInfoStr = `${escapeHtml(r.grade || '?')}학년 ${escapeHtml(r.class_num || '?')}반 ${escapeHtml(r.student_num || '?')}번`;
+
+        // 관리 학생 목록과 학년·반·번호가 같으면 안내만 (긴급 표시·개수는 바꾸지 않음)
+        const care = findCareStudent(r);
+        const careHtml = care
+          ? `<div class="care-badge" translate="no" spellcheck="false">⚠️ 관리 학생일 수 있음${care.note ? `: ${escapeHtml(care.note)}` : ''} (학년·반·번호를 학생에게 확인하세요)${careStale ? ' · 3월 전에 저장한 목록' : ''}</div>`
+          : '';
         return `
           <div class="record-card ${isEmergency ? 'emergency' : ''}">
             <div class="record-header">
               <div>
                 ${badges}
                 <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.25rem; color: var(--primary);">${studentInfoStr}</div>
-                <div class="record-meta">${dateStr} | 작성 언어: ${r.lang}</div>
+                ${careHtml}
+                <div class="record-meta">${escapeHtml(dateStr)} | 작성 언어: ${escapeHtml(r.lang)}</div>
               </div>
-              <button class="btn-resolve" onclick="resolveRecord('${r.id}')">확인 완료</button>
+              <button class="btn-resolve" data-id="${escapeHtml(r.id)}">확인 완료</button>
             </div>
-            
+
             <div class="ai-summary">
-              <strong>🤖 AI 요약:</strong> ${r.ai_summary ? r.ai_summary.replace(/\n/g, '<br>') : '요약 정보 없음'}
+              <strong>🤖 AI 요약:</strong> ${summaryHtml}
             </div>
-            
+
             <div class="record-body" style="margin-top: 1rem;">
               <div class="entry-grid">
                 ${entriesHtml}
@@ -387,7 +735,785 @@
             </div>
           </div>
         `;
+      };
+
+      // 형식이 잘못된 기록 하나 때문에 전체 목록(응급 포함)이 사라지지 않게
+      container.innerHTML = records.map(r => {
+        try {
+          return renderCard(r);
+        } catch (err) {
+          console.error("Render error:", err.message);
+          return `
+          <div class="record-card">
+            <div class="record-header">
+              <div>표시할 수 없는 기록입니다 (${escapeHtml(r && r.created_at)})</div>
+              <button class="btn-resolve" data-id="${escapeHtml(r && r.id)}">확인 완료</button>
+            </div>
+          </div>
+        `;
+        }
       }).join('');
+    }
+
+    // ─── 관리 학생 목록 ───
+    // 3월 건강조사서로 받은 목록을 이 PC 브라우저(localStorage)에만 저장.
+    // 서버·AI 요약·문진 기록 어디에도 보내지 않고, 카드의 안내 배지로만 씀.
+    const CARE_KEY = 'care_students';
+    const CARE_MAX = 500;          // 목록 최대 인원
+    const CARE_NOTE_MAX = 100;     // 내용 최대 글자 수
+    const CARE_BOX_GUARD_MS = 600; // 확인 창이 뜬 뒤 이 시간 안의 클릭은 무시 (두 번 클릭 방지)
+    const CARE_SAVE_FAIL = '저장하지 못했어요. 브라우저 저장 공간이 막혀 있거나 가득 찼을 수 있어요.';
+    const CARE_DEVICE_WARN = '이 기기는 학생 문진에 쓰인 기기예요. 관리 학생 목록은 보건교사 PC에서만 등록해 주세요.';
+    const CARE_HEADER_ERR = '제목 줄이 학년·반·번호·내용 순서가 아니에요. 연번·이름 칸은 빼고 복사해 주세요.';
+    const CARE_SEQ_ERR = '맨 앞에 연번 칸이 있는 것 같아요. 연번 칸은 빼고 학년·반·번호·내용 순서로 복사하거나, 제목 줄(학년·반·번호)까지 함께 복사해 주세요.';
+    const CARE_SKIP_COL = /^(연번|순번|no\.?|이름|성명|성별)$/i; // 제목 줄에서 내용에 넣지 않을 칸
+
+    let careStudents = [];       // [{ grade, class_num, student_num, note }] 학년·반·번호 순
+    let careIndex = new Map();   // '학년-반-번호' → 항목
+    let careUpdatedAt = '';      // 마지막 저장 시각
+    let careRegisteredAt = '';   // 목록을 새로 등록한 시각 (전부 바꾸기·빈 목록에 처음 저장할 때만 바뀜)
+    let careStale = false;       // 3월 전에 등록한 목록인지 (버튼·패널·배지 공통)
+    let careWarning = '';        // 저장된 값을 못 읽었을 때 패널에 보일 안내
+    let careConfirmBox = null;   // 열려 있는 확인 창 (한 번에 하나)
+    let careConfirmSlot = '';    // 그 확인 창이 들어간 자리 id
+
+    // '3', '03', '3.0', '3학년', '2반', '15번' → 숫자 (1~999가 아니면 null)
+    function parseCareNum(v) {
+      if (typeof v !== 'string' && typeof v !== 'number') return null;
+      const m = String(v).normalize('NFKC').trim().match(/^(?:제\s*)?(\d{1,6})(?:\.0+)?\s*(?:학년|반|번)?$/);
+      if (!m) return null;
+      const n = parseInt(m[1], 10);
+      return n >= 1 && n <= 999 ? n : null;
+    }
+
+    // 비교용 키 (정수로 맞춰서 '03' == '3')
+    function careKey(grade, classNum, studentNum) {
+      const g = parseCareNum(grade), c = parseCareNum(classNum), n = parseCareNum(studentNum);
+      return g && c && n ? `${g}-${c}-${n}` : null;
+    }
+
+    // 내용: 줄바꿈·연속 공백은 한 칸으로, 100자까지
+    function cleanCareNote(v) {
+      const s = typeof v === 'string' || typeof v === 'number' ? String(v) : '';
+      const chars = Array.from(s.replace(/[\u0000-\u001F\u007F\s]+/g, ' ').trim());
+      return { note: chars.slice(0, CARE_NOTE_MAX).join(''), cut: chars.length > CARE_NOTE_MAX };
+    }
+
+    // 학년·반·번호가 올바르면 { entry, cut }, 아니면 null
+    function makeCareEntry(grade, classNum, studentNum, note) {
+      const g = parseCareNum(grade), c = parseCareNum(classNum), n = parseCareNum(studentNum);
+      if (!g || !c || !n) return null;
+      const cleaned = cleanCareNote(note);
+      return {
+        entry: { grade: String(g), class_num: String(c), student_num: String(n), note: cleaned.note },
+        cut: cleaned.cut
+      };
+    }
+
+    // 같은 학생의 두 내용을 ' / '로 합침 (이미 든 내용은 다시 넣지 않음, 100자까지)
+    function joinCareNotes(a, b) {
+      if (!b || a.split(' / ').includes(b)) return { note: a, cut: false };
+      if (!a) return { note: b, cut: false };
+      return cleanCareNote(a + ' / ' + b);
+    }
+
+    // 읽은 항목을 out.entries에 모음. 같은 학년·반·번호가 또 나오면 내용을 합치고 out.dup을 셈
+    function collectCareEntry(out, seen, made) {
+      const s = made.entry;
+      const k = careKey(s.grade, s.class_num, s.student_num);
+      const prev = seen.get(k);
+      if (!prev) {
+        seen.set(k, { entry: s, cut: made.cut });
+        out.entries.push(s);
+        if (made.cut) out.cut++;
+        return;
+      }
+      out.dup++;
+      const joined = joinCareNotes(prev.entry.note, s.note);
+      prev.entry.note = joined.note;
+      if (!prev.cut && (made.cut || joined.cut)) { prev.cut = true; out.cut++; }
+    }
+
+    // 글을 줄·칸으로 나눔. 엑셀이 따옴표로 감싼 칸(칸 안 줄바꿈, "" 이스케이프)도 처리.
+    // 따옴표가 안 닫히거나, 닫는 따옴표 뒤에 다른 글이 붙거나, 따옴표 칸 안에 탭(쉼표 글은 쉼표+줄바꿈)이 있으면
+    // 잘못 들어간 따옴표로 보고 null → 따옴표 없이 다시 읽음 (뒷줄을 한 칸으로 삼키지 않게)
+    function splitCareRows(text, delim, useQuotes) {
+      const rows = [];
+      let row = [], cell = '', inQuote = false, fieldStart = true;
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        if (inQuote) {
+          if (ch !== '"') {
+            if (ch === '\t' && delim === '\t') return null;
+            cell += ch;
+          } else if (text[i + 1] === '"') {
+            cell += '"'; i++;
+          } else {
+            inQuote = false;
+            if (delim === ',' && cell.includes(',') && cell.includes('\n')) return null;
+            let j = i + 1;
+            while (text[j] === ' ') j++;
+            if (j < text.length && text[j] !== delim && text[j] !== '\n') return null;
+          }
+        } else if (fieldStart && ch === ' ') {
+          continue; // 칸 앞 공백은 버림 (어차피 trim)
+        } else if (fieldStart && useQuotes && ch === '"') {
+          inQuote = true;
+        } else if (ch === delim) {
+          row.push(cell); cell = ''; fieldStart = true;
+          continue;
+        } else if (ch === '\n') {
+          row.push(cell); rows.push(row); row = []; cell = ''; fieldStart = true;
+          continue;
+        } else {
+          cell += ch;
+        }
+        fieldStart = false;
+      }
+      if (inQuote) return null;
+      row.push(cell);
+      rows.push(row);
+      return rows;
+    }
+
+    // 제목 줄의 칸 이름(띄어쓰기 무시)으로 학년·반·번호 칸을 찾음. 못 찾으면 null
+    function mapCareHeader(cells) {
+      const names = cells.map(c => c.normalize('NFKC').replace(/\s+/g, ''));
+      const grade = names.findIndex(s => /^학년$/.test(s));
+      const cls = names.findIndex(s => /^반$/.test(s));
+      const num = names.findIndex(s => /^(번호|번)$/.test(s));
+      if (grade < 0 || cls < 0 || num < 0) return null;
+      const skip = new Set([grade, cls, num]);
+      const skipped = [];
+      names.forEach((s, i) => {
+        if (CARE_SKIP_COL.test(s)) { skip.add(i); skipped.push(s); }
+      });
+      return { grade, cls, num, skip, skipped };
+    }
+
+    // 붙여넣은 글(엑셀 탭 / 쉼표) → { entries, title, header, skipCols, dup, blank, badNum, tooFew, cut, error }
+    // error가 있으면 칸이 밀렸을 수 있어 아무것도 넣지 않음
+    function parseCarePaste(text) {
+      const src = String(text || '').replace(/\r\n?/g, '\n');
+      const delim = src.includes('\t') ? '\t' : ',';
+      const rows = splitCareRows(src, delim, true) || splitCareRows(src, delim, false);
+      const result = { entries: [], title: false, header: false, skipCols: [], dup: 0, blank: 0, badNum: 0, tooFew: 0, cut: 0, error: '' };
+      const seen = new Map();
+      let col = { grade: 0, cls: 1, num: 2, skip: new Set([0, 1, 2]) };
+      let first = true, numRows = 0, seqLike = 0;
+      for (const raw of rows) {
+        let cells = raw, sep = delim;
+        // 엑셀 줄 사이에 쉼표로 직접 적은 줄이 섞여 있어도 읽음
+        if (delim === '\t' && raw.length === 1 && raw[0].includes(',')) {
+          cells = (splitCareRows(raw[0], ',', true) || splitCareRows(raw[0], ',', false))[0];
+          sep = ',';
+        }
+        cells = cells.map(c => c.trim());
+        if (cells.every(c => c === '')) continue;
+        if (first) {
+          // 첫 줄 앞 3칸에 숫자가 없으면 제목 줄 → 칸 이름으로 위치를 맞춤 (연번·이름 칸이 있어도 밀리지 않게)
+          const head = cells.slice(0, 3);
+          const filled = cells.filter(c => c !== '').length;
+          if (head.some(c => c !== '') && head.every(c => parseCareNum(c) === null)) {
+            // 표 위 제목(한 칸만 채운 줄)은 한 줄까지 건너뛰고 다음 줄에서 제목 줄을 찾음
+            if (filled === 1 && !result.title) { result.title = true; continue; }
+            if (filled >= 3) {
+              first = false;
+              result.header = true;
+              const mapped = mapCareHeader(cells);
+              if (!mapped) return Object.assign(result, { entries: [], error: CARE_HEADER_ERR });
+              col = mapped;
+              result.skipCols = mapped.skipped;
+              continue;
+            }
+          }
+          first = false;
+        }
+        const g = cells[col.grade], c = cells[col.cls], n = cells[col.num];
+        if (g === undefined || c === undefined || n === undefined) { result.tooFew++; continue; }
+        if (g === '' || c === '' || n === '') { result.blank++; continue; }
+        const note = cells.filter((v, i) => !col.skip.has(i) && v !== '').join(sep === ',' ? ', ' : ' ');
+        const made = makeCareEntry(g, c, n, note);
+        if (!made) { result.badNum++; continue; }
+        numRows++;
+        if (!result.header && parseCareNum(cells[3]) !== null) seqLike++;
+        collectCareEntry(result, seen, made);
+      }
+      // 제목 줄 없이 4번째 칸까지 숫자인 줄이 대부분이면 맨 앞이 연번 칸 (학년·반·번호가 한 칸씩 밀림)
+      if (!result.header && seqLike * 2 > numRows) return Object.assign(result, { entries: [], error: CARE_SEQ_ERR });
+      return result;
+    }
+
+    // 저장값·파일의 students 배열 검사 (같은 학생은 내용을 합침) → { entries, dup, badNum, cut }
+    function normalizeCareStudents(arr) {
+      const out = { entries: [], dup: 0, badNum: 0, cut: 0 };
+      const seen = new Map();
+      arr.forEach(s => {
+        const made = s && typeof s === 'object' ? makeCareEntry(s.grade, s.class_num, s.student_num, s.note) : null;
+        if (!made) { out.badNum++; return; }
+        collectCareEntry(out, seen, made);
+      });
+      return out;
+    }
+
+    // 내보낸 파일 검사 → { entries, dup, badNum, cut, updatedAt, registeredAt } 또는 { error }
+    function parseCareFile(text) {
+      let data;
+      try {
+        data = JSON.parse(String(text).replace(/^﻿/, ''));
+      } catch (e) {
+        return { error: 'JSON 파일이 아니거나 내용이 깨져 있어요.' };
+      }
+      if (!data || typeof data !== 'object' || data.version !== 1 || !Array.isArray(data.students)) {
+        return { error: '관리 학생 파일 형식이 아니에요. 이 화면의 "파일로 내보내기"로 만든 파일을 골라 주세요.' };
+      }
+      return Object.assign(normalizeCareStudents(data.students), {
+        updatedAt: careTime(data.updatedAt),
+        registeredAt: careTime(data.registeredAt)
+      });
+    }
+
+    // 저장·내보내기에 쓰는 ISO 날짜 글이면 그대로(정규화), 아니면 '' (브라우저는 '...3' 같은 글도 날짜로 읽어 버림)
+    function careTime(v) {
+      if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})$/.test(v)) return '';
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? '' : d.toISOString();
+    }
+
+    // 올해 학년 시작(3월 1일). 1·2월이면 작년 3월 1일
+    function careMarchStart() {
+      const now = new Date();
+      return new Date(now.getMonth() >= 2 ? now.getFullYear() : now.getFullYear() - 1, 2, 1);
+    }
+
+    function isCareBeforeMarch(iso) {
+      return !!iso && new Date(iso) < careMarchStart();
+    }
+
+    // 둘 중 이른 시각 (빈 값은 빼고)
+    function olderCareTime(a, b) {
+      if (!a || !b) return a || b;
+      return new Date(a) <= new Date(b) ? a : b;
+    }
+
+    function sortCare(list) {
+      return list.sort((a, b) => (a.grade - b.grade) || (a.class_num - b.class_num) || (a.student_num - b.student_num));
+    }
+
+    // base에 incoming을 합침 (같은 학년·반·번호면 내용만 바꿈, 500명을 넘는 새 학생은 넣지 않음)
+    function mergeCareLists(base, incoming) {
+      const map = new Map();
+      base.forEach(s => map.set(careKey(s.grade, s.class_num, s.student_num), s));
+      const baseKeys = new Set(map.keys());
+      const updated = new Set();
+      let added = 0, overflow = 0;
+      incoming.forEach(s => {
+        const k = careKey(s.grade, s.class_num, s.student_num);
+        if (!k) return;
+        if (map.has(k)) {
+          map.set(k, s);
+          if (baseKeys.has(k)) updated.add(k);
+        } else if (map.size >= CARE_MAX) {
+          overflow++;
+        } else {
+          map.set(k, s);
+          added++;
+        }
+      });
+      return { list: sortCare(Array.from(map.values())), added, updated: updated.size, overflow };
+    }
+
+    // 카드의 학년·반·번호가 목록에 있으면 그 항목
+    function findCareStudent(r) {
+      const k = r ? careKey(r.grade, r.class_num, r.student_num) : null;
+      return (k && careIndex.get(k)) || null;
+    }
+
+    function careForStorage(s) {
+      return { grade: s.grade, class_num: s.class_num, student_num: s.student_num, note: s.note };
+    }
+
+    function careEntryLabel(s) {
+      return `${s.grade}학년 ${s.class_num}반 ${s.student_num}번${s.note ? ` – ${s.note}` : ''}`;
+    }
+
+    // 저장된 목록 읽기. 값이 깨져 있어도 대시보드는 그대로 (빈 목록 + 패널 안내)
+    function loadCareStudents() {
+      let raw = null;
+      careWarning = '';
+      try {
+        raw = localStorage.getItem(CARE_KEY);
+      } catch (e) {
+        careWarning = '이 브라우저는 저장 공간을 쓸 수 없어 관리 학생 목록을 읽지 못했어요.';
+      }
+      let list = [], updatedAt = '', registeredAt = '';
+      if (raw) {
+        try {
+          const data = JSON.parse(raw);
+          if (!data || typeof data !== 'object' || data.version !== 1 || !Array.isArray(data.students)) throw new Error('bad shape');
+          const read = normalizeCareStudents(data.students);
+          const merged = mergeCareLists([], read.entries);
+          list = merged.list;
+          updatedAt = careTime(data.updatedAt);
+          registeredAt = careTime(data.registeredAt);
+          const dropped = read.badNum + merged.overflow;
+          if (dropped) careWarning = `저장된 목록 중 ${dropped}명은 형식이 맞지 않아 빼고 보여요.`;
+        } catch (e) {
+          list = [];
+          updatedAt = '';
+          registeredAt = '';
+          careWarning = '저장된 관리 학생 목록이 손상돼 빈 목록으로 보여요. 내보내 둔 파일이 있으면 "파일 불러오기"로 다시 넣어 주세요.';
+        }
+      }
+      setCareState(list, updatedAt, registeredAt);
+    }
+
+    // 목록 저장 (성공하면 화면도 갱신). 실패하면 false
+    // times.registeredAt·updatedAt이 없으면 지금 시각, 등록 시각은 기존 값 유지 (빈 목록에 처음 저장할 때만 지금)
+    function saveCareStudents(list, times) {
+      const now = new Date().toISOString();
+      const t = times || {};
+      const kept = careStudents.length ? (careRegisteredAt || careUpdatedAt) : '';
+      const data = { version: 1, updatedAt: t.updatedAt || now, registeredAt: t.registeredAt || kept || now, students: list.map(careForStorage) };
+      try {
+        localStorage.setItem(CARE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error("Care save error:", e && e.name);
+        return false;
+      }
+      careWarning = '';
+      setCareState(list, data.updatedAt, data.registeredAt);
+      return true;
+    }
+
+    function clearCareStudents() {
+      try {
+        localStorage.removeItem(CARE_KEY);
+      } catch (e) {
+        console.error("Care clear error:", e && e.name);
+        return false;
+      }
+      careWarning = '';
+      setCareState([], '', '');
+      return true;
+    }
+
+    function setCareState(list, updatedAt, registeredAt) {
+      careStudents = list;
+      careIndex = new Map(list.map(s => [careKey(s.grade, s.class_num, s.student_num), s]));
+      careUpdatedAt = updatedAt || '';
+      careRegisteredAt = registeredAt || '';
+      // 등록 시각(없으면 마지막 저장)이 올해 3월 1일 전이면 버튼·배지에도 표시
+      careStale = list.length > 0 && isCareBeforeMarch(careRegisteredAt || careUpdatedAt);
+      const btn = document.getElementById('btn-care');
+      if (btn) {
+        btn.textContent = `관리 학생 (${list.length})${careWarning || careStale ? ' ⚠️' : ''}`;
+        btn.title = careStale ? '3월 전에 저장한 목록이에요' : '';
+      }
+      renderCarePanel();
+      // 카드 배지만 다시 그림 (서버에서 다시 받지 않음)
+      if (lastRecords) renderRecords(lastRecords, true);
+    }
+
+    // 학생 문진에 쓰인 기기인지 (step5가 sync_queue를 만들고, 문진 중이면 medical_state가 있음. 이 화면은 둘 다 만들지 않음)
+    function isStudentDevice() {
+      try {
+        if (localStorage.getItem('sync_queue') !== null) return true;
+      } catch (e) { /* 저장 공간을 못 쓰면 아래로 */ }
+      try {
+        if (sessionStorage.getItem('medical_state') !== null) return true;
+      } catch (e) { /* 없음 */ }
+      return false;
+    }
+
+    // 학생 기기면 경고를 보이고 '그래도 이 기기에 저장'을 눌러야 proceed (매번 물음)
+    function careDeviceGuard(slotId, proceed) {
+      if (!isStudentDevice()) return proceed();
+      showCareBox(slotId, CARE_DEVICE_WARN, [
+        { label: '취소' },
+        { label: '그래도 이 기기에 저장', cls: 'care-btn-danger', onClick: proceed }
+      ], true);
+    }
+
+    function setCareMsg(id, text, isError) {
+      const el = document.getElementById(id);
+      el.textContent = text || '';
+      el.className = 'care-msg ' + (isError ? 'err' : 'ok');
+    }
+
+    function resetCareMsgs() {
+      clearCareConfirm();
+      ['care-paste-msg', 'care-form-msg', 'care-list-msg', 'care-file-msg', 'care-clear-msg'].forEach(id => setCareMsg(id, ''));
+    }
+
+    // 건너뛴 이유 안내 (unit: '줄' 또는 '명')
+    function careSkipNotes(r, unit) {
+      const notes = [];
+      if (r.title) notes.push('맨 위 제목 한 줄은 건너뛰었어요');
+      if (r.header) notes.push(r.title ? '둘째 줄은 칸 이름 줄로 보고 건너뛰었어요' : '첫 줄은 제목 줄로 보고 건너뛰었어요');
+      if (r.skipCols && r.skipCols.length) notes.push(`${r.skipCols.join('·')} 칸은 넣지 않았어요`);
+      if (r.dup) notes.push(`${r.dup}${unit}은 같은 학생이라 내용을 합쳤어요`);
+      if (r.blank) notes.push(`${r.blank}${unit}은 학년·반·번호 칸이 비어 있어 건너뛰었어요 (엑셀에서 병합된 칸은 병합을 풀고 채운 뒤 복사해 주세요)`);
+      if (r.badNum) notes.push(`${r.badNum}${unit}은 학년·반·번호가 숫자가 아니라 건너뛰었어요`);
+      if (r.tooFew) notes.push(`${r.tooFew}${unit}은 칸이 모자라 건너뛰었어요 (학년·반·번호·내용 순서)`);
+      if (r.cut) notes.push(`${r.cut}${unit}은 내용이 ${CARE_NOTE_MAX}자를 넘어 ${CARE_NOTE_MAX}자까지만 넣었어요`);
+      return notes;
+    }
+
+    // 읽어 온 항목을 목록에 넣음 (mode: 'add' 합치기 / 'replace' 전부 바꾸기)
+    // times: 저장할 등록·저장 시각 (없으면 전부 바꾸기는 지금 등록, 추가는 기존 등록 시각 유지)
+    function applyCareEntries(parsed, mode, msgId, unit, times) {
+      const merged = mergeCareLists(mode === 'replace' ? [] : careStudents, parsed.entries);
+      const t = times || (mode === 'replace' ? { registeredAt: new Date().toISOString() } : null);
+      if (!saveCareStudents(merged.list, t)) {
+        setCareMsg(msgId, CARE_SAVE_FAIL, true);
+        return false;
+      }
+      const lines = [mode === 'replace'
+        ? `목록을 ${merged.list.length}명으로 바꿨어요`
+        : `${merged.added}명 추가했어요` + (merged.updated ? ` (${merged.updated}명은 이미 있어 내용을 바꿨어요)` : '')];
+      // 칸이 밀리지 않았는지 바로 볼 수 있게 처음 저장된 학생을 보여 줌
+      const firstSaved = parsed.entries.map(s => careIndex.get(careKey(s.grade, s.class_num, s.student_num))).find(Boolean);
+      if (firstSaved) lines.push('예: ' + careEntryLabel(firstSaved));
+      if (merged.overflow) lines.push(`목록은 최대 ${CARE_MAX}명이라 ${merged.overflow}명은 넣지 못했어요`);
+      setCareMsg(msgId, lines.concat(careSkipNotes(parsed, unit)).join('\n'), false);
+      return true;
+    }
+
+    function careNow() {
+      return (window.performance || Date).now();
+    }
+
+    // 패널 안 확인 창 (confirm() 대신). '취소'를 맨 앞에 두고 처음 포커스도 '취소'.
+    // 뜬 뒤 0.6초 안의 클릭은 무시 (두 번 클릭·터치가 같은 자리에 뜬 위험 버튼을 누르지 않게)
+    function showCareBox(slotId, text, buttons, warn) {
+      clearCareConfirm();
+      const box = document.createElement('div');
+      box.className = 'care-confirm';
+      const p = document.createElement('p');
+      if (warn) p.className = 'care-warn';
+      p.textContent = text;
+      const actions = document.createElement('div');
+      actions.className = 'care-actions';
+      const shownAt = careNow();
+      let firstBtn = null;
+      buttons.forEach(b => {
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'btn care-btn ' + (b.cls || 'btn-secondary');
+        el.textContent = b.label;
+        el.addEventListener('click', () => {
+          if (careNow() - shownAt < CARE_BOX_GUARD_MS) return;
+          clearCareConfirm();
+          if (b.onClick) b.onClick();
+        });
+        actions.appendChild(el);
+        if (!firstBtn) firstBtn = el;
+      });
+      box.appendChild(p);
+      box.appendChild(actions);
+      document.getElementById(slotId).appendChild(box);
+      careConfirmBox = box;
+      careConfirmSlot = slotId;
+      // 포커스 때문에 화면이 움직여 버튼이 손가락 아래로 오지 않게, 창이 보일 만큼만 스크롤
+      if (firstBtn) firstBtn.focus({ preventScroll: true });
+      if (box.scrollIntoView) box.scrollIntoView({ block: 'nearest' });
+    }
+
+    function clearCareConfirm() {
+      if (careConfirmBox) careConfirmBox.remove();
+      careConfirmBox = null;
+      careConfirmSlot = '';
+    }
+
+    function renderCarePanel() {
+      const modal = document.getElementById('care-modal');
+      if (!modal || modal.hidden) return;
+      document.getElementById('care-device-warn').textContent = isStudentDevice() ? CARE_DEVICE_WARN : '';
+      document.getElementById('care-warning').textContent = careWarning;
+      document.getElementById('care-list-count').textContent = `(${careStudents.length}명)`;
+
+      const fmt = iso => new Date(iso).toLocaleString('ko-KR');
+      const reg = careRegisteredAt && careRegisteredAt !== careUpdatedAt ? ` · 목록 등록: ${fmt(careRegisteredAt)}` : '';
+      document.getElementById('care-updated').textContent = careUpdatedAt ? `마지막 저장: ${fmt(careUpdatedAt)}${reg}` : '';
+      // 올해 학년 시작(3월 1일) 전에 등록한 목록이면 안내 (추가·삭제로는 등록 시각이 바뀌지 않음)
+      document.getElementById('care-stale').textContent = careStale
+        ? '3월 전에 등록한 목록이에요. 새 학년 명단으로 다시 등록했는지 확인해 주세요. (새 명단은 "전부 바꾸기"로 넣으면 이 안내가 사라져요)'
+        : '';
+
+      const tbody = document.getElementById('care-tbody');
+      tbody.textContent = '';
+      const frag = document.createDocumentFragment();
+      careStudents.forEach(s => {
+        const tr = document.createElement('tr');
+        [s.grade, s.class_num, s.student_num].forEach(v => {
+          const td = document.createElement('td');
+          td.className = 'num';
+          td.textContent = v;
+          tr.appendChild(td);
+        });
+        const noteTd = document.createElement('td');
+        noteTd.className = 'note';
+        noteTd.textContent = s.note || '-';
+        tr.appendChild(noteTd);
+        const delTd = document.createElement('td');
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'care-del';
+        del.dataset.key = careKey(s.grade, s.class_num, s.student_num);
+        del.textContent = '삭제';
+        del.setAttribute('aria-label', `${s.grade}학년 ${s.class_num}반 ${s.student_num}번 삭제`);
+        delTd.appendChild(del);
+        tr.appendChild(delTd);
+        frag.appendChild(tr);
+      });
+      tbody.appendChild(frag);
+      document.getElementById('care-table-wrap').hidden = careStudents.length === 0;
+      document.getElementById('care-empty').hidden = careStudents.length > 0;
+    }
+
+    function openCarePanel() {
+      document.getElementById('care-modal').hidden = false;
+      renderCarePanel();
+      document.getElementById('care-title').focus();
+    }
+
+    function closeCarePanel() {
+      const modal = document.getElementById('care-modal');
+      if (modal.hidden) return;
+      clearCareConfirm();
+      modal.hidden = true;
+      document.getElementById('btn-care').focus();
+    }
+
+    // 붙여넣은 글 검사. 넣을 학생이 없으면 안내하고 null
+    function readCarePaste(text) {
+      if (!text.trim()) {
+        setCareMsg('care-paste-msg', '붙여넣은 내용이 없어요.', true);
+        return null;
+      }
+      const parsed = parseCarePaste(text);
+      if (parsed.error) {
+        setCareMsg('care-paste-msg', parsed.error, true);
+        return null;
+      }
+      if (!parsed.entries.length) {
+        setCareMsg('care-paste-msg', ['등록할 학생을 찾지 못했어요.'].concat(careSkipNotes(parsed, '줄')).join('\n'), true);
+        return null;
+      }
+      return parsed;
+    }
+
+    function onCarePaste(mode) {
+      resetCareMsgs();
+      const parsed = readCarePaste(document.getElementById('care-paste').value);
+      if (!parsed) return;
+      careDeviceGuard('care-paste-confirm', () => {
+        if (mode === 'replace' && careStudents.length) {
+          const count = mergeCareLists([], parsed.entries).list.length;
+          showCareBox('care-paste-confirm', `지금 목록 ${careStudents.length}명을 모두 지우고 붙여넣은 ${count}명으로 바꿀까요?`, [
+            { label: '취소' },
+            { label: '네, 바꾸기', cls: 'care-btn-danger', onClick: () => runCarePaste(mode) }
+          ]);
+        } else {
+          runCarePaste(mode);
+        }
+      });
+    }
+
+    // 실제로 넣을 때 입력칸을 다시 읽음 (확인 창이 떠 있는 동안 고친 글도 반영). 저장한 글 그대로일 때만 비움
+    function runCarePaste(mode) {
+      const ta = document.getElementById('care-paste');
+      const text = ta.value;
+      const parsed = readCarePaste(text);
+      if (!parsed) return;
+      if (applyCareEntries(parsed, mode, 'care-paste-msg', '줄') && ta.value === text) ta.value = '';
+    }
+
+    // 직접 추가 칸 검사. 잘못되면 안내하고 null
+    function readCareForm() {
+      const v = id => document.getElementById(id).value;
+      const made = makeCareEntry(v('care-grade'), v('care-class'), v('care-num'), v('care-note'));
+      if (!made) setCareMsg('care-form-msg', '학년·반·번호는 1 이상의 숫자로 적어 주세요.', true);
+      return made;
+    }
+
+    function onCareFormSubmit(e) {
+      e.preventDefault();
+      resetCareMsgs();
+      if (!readCareForm()) return;
+      careDeviceGuard('care-form-confirm', saveCareForm);
+    }
+
+    function saveCareForm() {
+      const made = readCareForm();
+      if (!made) return;
+      const s = made.entry;
+      const exists = careIndex.has(careKey(s.grade, s.class_num, s.student_num));
+      const merged = mergeCareLists(careStudents, [s]);
+      if (merged.overflow) {
+        setCareMsg('care-form-msg', `목록은 최대 ${CARE_MAX}명까지예요.`, true);
+        return;
+      }
+      if (!saveCareStudents(merged.list)) {
+        setCareMsg('care-form-msg', CARE_SAVE_FAIL, true);
+        return;
+      }
+      const who = `${s.grade}학년 ${s.class_num}반 ${s.student_num}번`;
+      setCareMsg('care-form-msg', (exists ? `${who}은 이미 있어 내용을 바꿨어요` : `${who}을 추가했어요`)
+        + (made.cut ? ` (내용은 ${CARE_NOTE_MAX}자까지만)` : ''), false);
+      // 같은 반을 이어서 넣기 쉽게 학년·반은 남겨 둠
+      const n = document.getElementById('care-num');
+      n.value = '';
+      document.getElementById('care-note').value = '';
+      n.focus();
+    }
+
+    function onCareDelete(e) {
+      const btn = e.target.closest('.care-del');
+      if (!btn) return;
+      resetCareMsgs();
+      const key = btn.dataset.key;
+      const target = careIndex.get(key);
+      if (!target) return;
+      if (!saveCareStudents(careStudents.filter(s => careKey(s.grade, s.class_num, s.student_num) !== key))) {
+        setCareMsg('care-list-msg', CARE_SAVE_FAIL, true);
+        return;
+      }
+      setCareMsg('care-list-msg', `${target.grade}학년 ${target.class_num}반 ${target.student_num}번을 지웠어요`, false);
+    }
+
+    function exportCareStudents() {
+      resetCareMsgs();
+      if (!careStudents.length) {
+        setCareMsg('care-file-msg', '내보낼 학생이 없어요.', true);
+        return;
+      }
+      const now = new Date().toISOString();
+      const data = {
+        version: 1,
+        updatedAt: careUpdatedAt || now,
+        registeredAt: careRegisteredAt || careUpdatedAt || now,
+        students: careStudents.map(careForStorage)
+      };
+      const d = new Date();
+      const pad = v => String(v).padStart(2, '0');
+      const name = `care_students_${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.json`;
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setCareMsg('care-file-msg', `${name} 파일로 내보냈어요. 학생 건강 정보가 들어 있으니 옮긴 뒤에는 USB·다운로드 폴더에서 지워 주세요.`, false);
+    }
+
+    async function onCareFileChosen(e) {
+      const input = e.target;
+      const file = input.files && input.files[0];
+      input.value = ''; // 같은 파일을 다시 골라도 동작하게
+      if (!file) return;
+      resetCareMsgs();
+      if (file.size > 1024 * 1024) {
+        setCareMsg('care-file-msg', '파일이 너무 커요. 이 화면에서 내보낸 관리 학생 파일인지 확인해 주세요.', true);
+        return;
+      }
+      let text;
+      try {
+        text = await file.text();
+      } catch (err) {
+        setCareMsg('care-file-msg', '파일을 읽지 못했어요.', true);
+        return;
+      }
+      const parsed = parseCareFile(text);
+      if (parsed.error) {
+        setCareMsg('care-file-msg', parsed.error, true);
+        return;
+      }
+      if (!parsed.entries.length) {
+        setCareMsg('care-file-msg', ['파일에 등록할 학생이 없어요.'].concat(careSkipNotes(parsed, '명')).join('\n'), true);
+        return;
+      }
+      careDeviceGuard('care-file-confirm', () => showCareFileChoice(file.name, parsed));
+    }
+
+    // 불러온 파일을 어떻게 넣을지 물음. 파일의 등록 시각을 이어받아 작년 파일이 새 목록처럼 보이지 않게
+    function showCareFileChoice(fileName, parsed) {
+      const count = mergeCareLists([], parsed.entries).list.length;
+      const fileReg = parsed.registeredAt || parsed.updatedAt;
+      const old = isCareBeforeMarch(fileReg) ? ' 작년(3월 전) 목록이에요. 새 학년 명단이 맞는지 확인해 주세요.' : '';
+      const replace = () => applyCareEntries(parsed, 'replace', 'care-file-msg', '명', {
+        registeredAt: fileReg || new Date().toISOString(),
+        updatedAt: parsed.updatedAt
+      });
+      // 추가: 지금 목록과 파일 중 더 이른 등록 시각을 남김
+      const add = () => applyCareEntries(parsed, 'add', 'care-file-msg', '명', {
+        registeredAt: olderCareTime(careStudents.length ? careRegisteredAt || careUpdatedAt : new Date().toISOString(), fileReg)
+      });
+      showCareBox('care-file-confirm', `파일 "${fileName}"에서 ${count}명을 읽었어요.${old} 어떻게 넣을까요?`, [
+        { label: '취소' },
+        { label: '추가', cls: 'btn-primary', onClick: add },
+        {
+          label: '전부 바꾸기',
+          onClick: () => {
+            if (!careStudents.length) return replace();
+            showCareBox('care-file-confirm', `지금 목록 ${careStudents.length}명을 모두 지우고 파일의 ${count}명으로 바꿀까요?${old}`, [
+              { label: '취소' },
+              { label: '네, 바꾸기', cls: 'care-btn-danger', onClick: replace }
+            ]);
+          }
+        }
+      ]);
+    }
+
+    function onCareClear() {
+      resetCareMsgs();
+      const count = careStudents.length;
+      if (!count && !careWarning) {
+        setCareMsg('care-clear-msg', '목록이 이미 비어 있어요.', false);
+        return;
+      }
+      const text = count
+        ? `관리 학생 ${count}명을 모두 지울까요? 되돌릴 수 없어요. (필요하면 먼저 "파일로 내보내기")`
+        : '읽지 못한 저장값을 지우고 빈 목록으로 시작할까요?';
+      showCareBox('care-clear-confirm', text, [
+        { label: '취소' },
+        {
+          label: '네, 모두 지우기',
+          cls: 'care-btn-danger',
+          onClick: () => {
+            const ok = clearCareStudents();
+            setCareMsg('care-clear-msg', ok ? '목록을 비웠어요.' : CARE_SAVE_FAIL, !ok);
+          }
+        }
+      ]);
+    }
+
+    function initCare() {
+      document.getElementById('btn-care').addEventListener('click', openCarePanel);
+      document.getElementById('care-close').addEventListener('click', closeCarePanel);
+      document.getElementById('care-paste-add').addEventListener('click', () => onCarePaste('add'));
+      document.getElementById('care-paste-replace').addEventListener('click', () => onCarePaste('replace'));
+      // 확인 창이 떠 있을 때 글을 고치면 창을 닫음 (창에 적힌 인원이 고친 글과 달라지지 않게)
+      document.getElementById('care-paste').addEventListener('input', () => {
+        if (careConfirmSlot === 'care-paste-confirm') clearCareConfirm();
+      });
+      document.getElementById('care-form').addEventListener('submit', onCareFormSubmit);
+      document.getElementById('care-tbody').addEventListener('click', onCareDelete);
+      document.getElementById('care-export').addEventListener('click', exportCareStudents);
+      document.getElementById('care-import').addEventListener('click', () => document.getElementById('care-file').click());
+      document.getElementById('care-file').addEventListener('change', onCareFileChosen);
+      document.getElementById('care-clear').addEventListener('click', onCareClear);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeCarePanel();
+      });
+      // 다른 탭에서 목록을 바꾸면 이 탭도 갱신
+      window.addEventListener('storage', (e) => {
+        if (e.key === CARE_KEY || e.key === null) loadCareStudents();
+      });
+      loadCareStudents();
     }
   </script>
 </body>

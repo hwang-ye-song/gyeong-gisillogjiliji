@@ -115,48 +115,23 @@
 
         btn.addEventListener('click', (e) => {
           let state = getState();
-          const target = e.currentTarget;
-          const partKey = target.dataset.part;
-          
-          state.headSubSelected = false; 
-          state.bellyPos = null; 
-          state.hurtMethod = null; 
-          state.hurtState = null; 
-          state.symptoms = [];
-          state.records = [];
-          state.partsQueue = null;
-          
-          if (partKey === 'part_chest') {
-            state.part = (translations.ko['part_belly'] || '가슴/배/등') + ' (' + (translations.ko['belly_chest'] || '가슴') + ')';
-          } else {
-            state.part = translations.ko[partKey] || partKey;
-          }
-          
-          if (partKey === 'idk') {
-            state.sideSelect = null;
-            state.symptoms.push(translations.ko['idk']);
-            saveState(state);
-            window.location.href = 'step4.html';
-          } else if (partKey === 'part_arm') {
-            saveState(state);
-            window.location.href = 'step1_arm.html';
+          const partKey = e.currentTarget.dataset.part;
+
+          // 새 회차 시작 (끝내지 못한 회차는 버리고, 앞에서 끝낸 기록 state.visit은 그대로)
+          state.current = newRound(translations.ko[partKey] || partKey);
+
+          // 팔은 팔 그림, 다리·머리·배는 세부 부위 화면, 나머지(가슴·몸 전체)는 바로 증상 선택
+          let next = 'step2.html';
+          if (partKey === 'part_arm') {
+            next = 'step1_arm.html';
           } else if (partKey === 'part_leg') {
-            state.sideSelect = 'leg';
-            saveState(state);
-            window.location.href = 'step1_sub.html';
+            state.current.sub.side = 'leg';
+            next = 'step1_sub.html';
           } else if (partKey === 'part_head' || partKey === 'part_belly') {
-            state.sideSelect = null;
-            saveState(state);
-            window.location.href = 'step1_sub.html';
-          } else if (partKey === 'part_chest') {
-            state.sideSelect = null;
-            saveState(state);
-            window.location.href = 'step2.html';
-          } else {
-            state.sideSelect = null;
-            saveState(state);
-            window.location.href = 'step2.html';
+            next = 'step1_sub.html';
           }
+          saveState(state);
+          window.location.href = next;
         });
       });
     });

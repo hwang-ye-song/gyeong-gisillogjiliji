@@ -19,27 +19,7 @@
     <h1 class="speakable"><span id="title-span" data-i18n="step_2_title">어떻게 아파요?</span><button class="btn-speaker">🔊</button></h1>
     <div id="selected-part-display" style="text-align: center; color: var(--primary); font-weight: bold; margin-bottom: 1.5rem; font-size: 1.1rem; background: rgba(99,102,241,0.1); padding: 0.5rem 1rem; border-radius: 8px; width: fit-content; margin-left: auto; margin-right: auto;"></div>
     
-    <!-- Special Hurt Flow Containers -->
-    <div id="hurt-flow-1" class="hidden hurt-flow">
-      <div class="symptoms-grid single-select">
-        <button class="symptom-card" data-hurt="hurt_1"><span class="emoji">🤸</span><span class="text" data-i18n="hurt_1">넘어짐</span></button>
-        <button class="symptom-card" data-hurt="hurt_2"><span class="emoji">💥</span><span class="text" data-i18n="hurt_2">부딪힘</span></button>
-        <button class="symptom-card" data-hurt="hurt_3"><span class="emoji">🔪</span><span class="text" data-i18n="hurt_3">베임</span></button>
-        <button class="symptom-card" data-hurt="hurt_4"><span class="emoji">🦶</span><span class="text" data-i18n="hurt_4">접질림</span></button>
-        <button class="symptom-card btn-idk-card"><span class="emoji">❓</span><span class="text" data-i18n="idk">잘 모르겠어요</span></button>
-      </div>
-    </div>
-    
-    <div id="hurt-flow-2" class="hidden hurt-flow">
-      <div class="symptoms-grid single-select">
-        <button class="symptom-card" data-state="state_1"><span class="emoji">🩸</span><span class="text" data-i18n="state_1">피가 나요</span></button>
-        <button class="symptom-card" data-state="state_2"><span class="emoji">🎈</span><span class="text" data-i18n="state_2">부었어요</span></button>
-        <button class="symptom-card" data-state="state_3"><span class="emoji">🫐</span><span class="text" data-i18n="state_3">멍들었어요</span></button>
-        <button class="symptom-card" data-state="state_4"><span class="emoji">⚡</span><span class="text" data-i18n="state_4">움직이면 아파요</span></button>
-        <button class="symptom-card btn-idk-card"><span class="emoji">❓</span><span class="text" data-i18n="idk">잘 모르겠어요</span></button>
-      </div>
-    </div>
-
+    <!-- 머리를 다친 경우 추가 질문 -->
     <div id="head-q-flow" class="hidden hurt-flow">
       <div class="symptoms-grid single-select">
         <button class="symptom-card" data-headq="yes"><span class="emoji">⭕</span><span class="text" data-i18n="yes">네</span></button>
@@ -60,26 +40,14 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
-      
-      state.records = state.records || [];
-      
-      // Convert legacy single part to partsQueue
-      if ((!state.partsQueue || state.partsQueue.length === 0) && state.part) {
-          state.partsQueue = [{ id: 'single', name: state.part, lookupPart: state.part }];
+      const cur = state.current;
+      if (!cur) { window.location.href = 'step1.html'; return; }
+
+      // 배·팔 묶음이 없으면 고른 부위 하나로 대기열을 만듦
+      if (!cur.queue || cur.queue.length === 0) {
+          cur.queue = [{ id: 'single', name: cur.part, lookupPart: cur.part }];
       }
-      
-      // If no queue, go back
-      if (!state.partsQueue || state.partsQueue.length === 0) {
-          window.location.href = 'step1.html'; return;
-      }
-      
-      state.currentPartObj = state.partsQueue[0];
-      state.symptoms = state.symptoms || [];
-      
-      // Reset symptoms if going back to this page
-      if (state.currentPartObj.lookupPart !== '다쳤어요') {
-          state.symptoms = state.symptoms.filter(s => !s.startsWith('다침:'));
-      }
+      cur.partObj = cur.queue[0];
 
       function updateTitle(i18nKey) {
         const span = document.getElementById('title-span');
@@ -92,49 +60,23 @@
         document.getElementById(id).classList.remove('hidden');
       };
 
-      // 1. Hurt Flow
-      if (state.currentPartObj.lookupPart === '다쳤어요' && !state.hurtMethod) {
-        updateTitle('hurt_how');
-        showFlow('hurt-flow-1');
-        document.querySelectorAll('[data-hurt]').forEach(btn => {
-          btn.onclick = (e) => {
-            state.hurtMethod = translations.ko[e.currentTarget.dataset.hurt];
-            saveState(state);
-            // Ask State
-            updateTitle('hurt_state');
-            showFlow('hurt-flow-2');
-          };
-        });
-        
-        document.querySelectorAll('[data-state]').forEach(btn => {
-          btn.onclick = (e) => {
-            state.hurtState = translations.ko[e.currentTarget.dataset.state];
-            saveState(state);
-            state.symptoms = [`다침: ${state.hurtMethod}, ${state.hurtState}`];
-            saveState(state);
-            window.location.href = 'step3.html';
-          };
-        });
-      }
-      // 2. Normal Symptoms Flow
-      else {
-        renderSymptoms();
-      }
+      renderSymptoms();
 
       function renderSymptoms() {
         updateTitle('step_2_title');
-        
+
         const partDisplay = document.getElementById('selected-part-display');
-        
-        // Display title with loop index context
-        const total = state.records.length + state.partsQueue.length;
-        const currentIdx = state.records.length + 1;
-        
-        let displayStr = state.currentPartObj.name;
+
+        // 몇 번째 부위인지 표시 (앞에서 끝낸 기록 + 남은 대기열)
+        const doneCount = allEntries(state).length;
+        const total = doneCount + cur.queue.length;
+        const currentIdx = doneCount + 1;
+
+        let displayStr = cur.partObj.name;
         // Translate belly parts if needed
         const t = translations[state.lang] || translations['ko'];
         if (t[displayStr]) displayStr = t[displayStr];
-        else if (t[state.currentPartObj.id]) displayStr = t[state.currentPartObj.id];
+        else if (t[cur.partObj.id]) displayStr = t[cur.partObj.id];
         
         if (total > 1) {
              partDisplay.innerText = `📍 ${t['pain_1'] ? t['pain_1'].replace('1', currentIdx) : '통증 ' + currentIdx}: ${displayStr}`;
@@ -146,7 +88,7 @@
         const container = document.getElementById('symptoms-container');
         container.innerHTML = '';
         
-        let lookupPart = state.currentPartObj.lookupPart;
+        let lookupPart = cur.partObj.lookupPart;
         if (lookupPart.includes(' (')) {
             const base = lookupPart.split(' (')[0];
             const detail = lookupPart.split(' (')[1].replace(')', '');
@@ -158,118 +100,84 @@
         let symptomsList = symptomsData[lookupPart] || [];
         symptomsList.forEach(s => {
           const btn = document.createElement('button');
-          btn.className = 'symptom-card multi-select ' + (state.symptoms.includes(s.ko) ? 'selected' : '');
-          btn.innerHTML = `<span class="emoji">${s.icon}</span><span class="text">${s[state.lang] || s.ko}</span>`;
+          btn.className = 'symptom-card multi-select ' + (cur.symptoms.includes(s.ko) ? 'selected' : '');
+          btn.innerHTML = `<span class="emoji">${escapeHtml(s.icon)}</span><span class="text">${escapeHtml(s[state.lang] || s.ko)}</span>`;
           btn.onclick = () => {
-            if (state.symptoms.includes(s.ko)) {
-              state.symptoms = state.symptoms.filter(sym => sym !== s.ko);
+            if (cur.symptoms.includes(s.ko)) {
+              cur.symptoms = cur.symptoms.filter(sym => sym !== s.ko);
               btn.classList.remove('selected');
             } else {
-              state.symptoms.push(s.ko);
+              cur.symptoms.push(s.ko);
               btn.classList.add('selected');
             }
             saveState(state);
-            document.getElementById('btn-next').disabled = state.symptoms.length === 0;
+            document.getElementById('btn-next').disabled = cur.symptoms.length === 0;
           };
           container.appendChild(btn);
         });
-        
+
         // Add IDK card
         const idkBtn = document.createElement('button');
         idkBtn.className = 'symptom-card btn-idk-card';
-        idkBtn.innerHTML = `<span class="emoji">❓</span><span class="text">${translations[state.lang].idk || translations.ko.idk}</span>`;
+        idkBtn.innerHTML = `<span class="emoji">❓</span><span class="text">${escapeHtml(t.idk || translations.ko.idk)}</span>`;
         idkBtn.onclick = () => {
-            state.symptoms = [translations.ko.idk];
+            cur.symptoms = [translations.ko.idk];
+            cur.headQ = null;
             saveState(state);
             window.location.href = 'step3.html';
         };
         container.appendChild(idkBtn);
 
-        document.getElementById('btn-next').disabled = state.symptoms.length === 0;
+        document.getElementById('btn-next').disabled = cur.symptoms.length === 0;
         document.getElementById('btn-next').onclick = () => {
-          if (state.currentPartObj.lookupPart === '머리' && state.symptoms.some(s => s === '머리를 다쳤어요' || s === '부딪혔어요')) {
+          if (cur.partObj.lookupPart === '머리' && cur.symptoms.some(s => s === '머리를 다쳤어요' || s === '부딪혔어요')) {
             updateTitle('head_q');
             showFlow('head-q-flow');
           } else {
+            // 머리 질문을 안 한 경우 전에 고른 답이 남지 않게
+            cur.headQ = null;
             saveState(state);
             window.location.href = 'step3.html';
           }
         };
 
-        // Head Q Flow
+        // Head Q Flow (네: true, 아니요: false, 잘 모르겠어요: null)
         document.querySelectorAll('[data-headq]').forEach(btn => {
           btn.onclick = (e) => {
-            state.headQ = e.currentTarget.dataset.headq === 'yes' ? true : false;
+            cur.headQ = e.currentTarget.dataset.headq === 'yes' ? true : false;
             saveState(state);
             window.location.href = 'step3.html';
           };
         });
+        document.querySelector('#head-q-flow .btn-idk-card').onclick = () => {
+          cur.headQ = null;
+          saveState(state);
+          window.location.href = 'step3.html';
+        };
       }
-
-      // I don't know button logic for hardcoded flows
-      document.querySelectorAll('.btn-idk-card').forEach(btn => {
-        btn.addEventListener('click', () => {
-          if (state.currentPartObj.lookupPart === '다쳤어요') {
-            if (!state.hurtMethod) {
-              state.hurtMethod = translations.ko.idk;
-              saveState(state);
-              updateTitle('hurt_state');
-              showFlow('hurt-flow-2');
-            } else {
-              state.hurtState = translations.ko.idk;
-              state.symptoms = [`다침: ${state.hurtMethod}, ${state.hurtState}`];
-              saveState(state);
-              window.location.href = 'step3.html';
-            }
-          } else if (!document.getElementById('head-q-flow').classList.contains('hidden')) {
-            state.headQ = null; // or whatever represents idk for headQ
-            saveState(state);
-            window.location.href = 'step3.html';
-          }
-        });
-      });
 
       // Back Button
       document.getElementById('btn-back').addEventListener('click', () => {
-        if (state.currentPartObj.lookupPart === '다쳤어요') {
-          if (state.hurtMethod && !state.hurtState) {
-            state.hurtMethod = null;
-            saveState(state);
-            location.reload();
-          } else {
-            window.location.href = 'step1.html';
-          }
-        } else if (!document.getElementById('head-q-flow').classList.contains('hidden')) {
+        if (!document.getElementById('head-q-flow').classList.contains('hidden')) {
           showFlow('symptoms-container');
           updateTitle('step_2_title');
-        } else {
-          // 부위를 다시 고를 수 있도록 이번 회차 임시 상태를 비움 (이전 큐가 그대로 쓰이지 않게)
-          const resetCurrentPart = () => {
-              state.partsQueue = null;
-              state.currentPartObj = null;
-              state.symptoms = [];
-              state.painLevels = {};
-              // 배·팔 두 번째 묶음에서 돌아온 경우 이번 회차에 먼저 저장된 기록도 버림
-              state.records = (state.records || []).slice(0, state.committedRecords || 0);
-          };
-          // Check if we came from step1_sub (i.e. we have sub-divisions)
-          if (state.sideSelect || state.headSubSelected) {
-              if (state.headSubSelected) {
-                  state.headSubSelected = false;
-                  state.part = '머리';
-              }
-              resetCurrentPart();
-              saveState(state);
-              window.location.href = 'step1_sub.html';
-          } else if (state.part === translations.ko['part_belly'] || state.part === translations.ko['part_arm']) {
-              // 배·팔은 구역 선택 화면으로
-              resetCurrentPart();
-              saveState(state);
-              window.location.href = state.part === translations.ko['part_arm'] ? 'step1_arm.html' : 'step1_sub.html';
-          } else {
-              window.location.href = 'step1.html';
-          }
+          return;
         }
+        // 부위를 다시 고르도록 이번 회차 대기열·답을 비움 (배·팔 두 번째 묶음이면 먼저 끝낸 기록도 버림)
+        restartRound(cur);
+        let back = 'step1.html';
+        if (cur.sub.side) {
+          back = 'step1_sub.html';
+        } else if (cur.sub.headSub) {
+          cur.sub.headSub = false;
+          cur.part = translations.ko['part_head'];
+          back = 'step1_sub.html';
+        } else if (cur.part === translations.ko['part_belly'] || cur.part === translations.ko['part_arm']) {
+          // 배·팔은 구역 선택 화면으로
+          back = cur.part === translations.ko['part_arm'] ? 'step1_arm.html' : 'step1_sub.html';
+        }
+        saveState(state);
+        window.location.href = back;
       });
 
       applyLanguageToUI();

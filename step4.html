@@ -59,28 +59,25 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
-      if (!state.records || state.records.length === 0) { window.location.href = 'step1.html'; return; }
+      // 끝낸 부위 기록 전체 (앞 회차 + 이번 회차): 언제부터·다친 원인을 이 기록에 바로 적음
+      const entries = allEntries(state);
+      if (entries.length === 0) { window.location.href = 'step1.html'; return; }
 
-      // 머리 질문(어지럽거나 토할 것 같아요?) 답을 그 부위 기록에 저장 (step4를 떠날 때 headQ가 초기화됨)
-      state.records.forEach(r => {
-        if (r.headQ === undefined && r.partObj && r.partObj.lookupPart === '머리') {
-          const asked = r.symptoms.some(s => s === '머리를 다쳤어요' || s === '부딪혔어요');
-          r.headQ = (asked && typeof state.headQ === 'boolean') ? state.headQ : null;
-        }
-      });
-      saveState(state);
+      // 이전: 이번 회차의 마지막 부위 기록을 되돌려 통증 단계(step3)부터 다시 고르게 함
+      document.getElementById('btn-prev4').addEventListener('click', (e) => {
+        // 두 번 눌러 기록 두 개가 되돌려지지 않도록 한 번만 처리
+        const prevBtn = e.currentTarget;
+        if (prevBtn.disabled) return;
+        prevBtn.disabled = true;
 
-      // 이전: 마지막 부위 기록을 되돌려 통증 단계(step3)부터 다시 고르게 함
-      document.getElementById('btn-prev4').addEventListener('click', () => {
-        const last = state.records.pop();
-        if (!last || !last.partObj) { window.location.href = 'step1.html'; return; }
-        // 다음(알레르기)에 갔다 온 경우 part가 비어 있음: 다시 '진행 중인 회차'로 표시해야 step1에서 같은 기록이 중복 확정되지 않음
-        if (!state.part) state.part = last.partObj.lookupPart;
-        state.partsQueue = [last.partObj, ...(state.partsQueue || [])];
-        state.currentPartObj = last.partObj;
-        state.symptoms = last.symptoms || [];
-        state.painLevels = last.painLevels || {};
-        state.headQ = (last.headQ === undefined) ? null : last.headQ;
+        const cur = state.current;
+        if (!cur || cur.done.length === 0) { window.location.href = 'step1.html'; return; }
+        const last = cur.done.pop();
+        cur.queue = [last.partObj, ...(cur.queue || [])];
+        cur.partObj = last.partObj;
+        cur.symptoms = last.symptoms;
+        cur.painLevels = last.painLevels;
+        cur.headQ = last.headQ;
         saveState(state);
         window.location.href = 'step3.html';
       });
@@ -94,19 +91,19 @@
       let hasFever = false;
       let hasVomit = false;
 
-      state.records.forEach((record, rIdx) => {
-         record.symptoms.forEach((s, sIdx) => {
+      entries.forEach((entry, eIdx) => {
+         entry.symptoms.forEach((s, sIdx) => {
              allSymptoms.push({
-                 id: `time_${rIdx}_${sIdx}`,
-                 partName: record.partObj.name,
+                 id: `time_${eIdx}_${sIdx}`,
+                 partName: entry.partObj.name,
                  symptom: s,
-                 recordIndex: rIdx
+                 entryIndex: eIdx
              });
              if (s.includes('배')) hasBelly = true;
              if (s.includes('열이 나요')) hasFever = true;
              if (s.includes('토할 것 같아요')) hasVomit = true;
          });
-         if (record.partObj.lookupPart === '배' || record.partObj.lookupPart === '윗배' || record.partObj.lookupPart === '아랫배' || record.partObj.lookupPart === '몸통') {
+         if (entry.partObj.lookupPart === '배' || entry.partObj.lookupPart === '윗배' || entry.partObj.lookupPart === '아랫배' || entry.partObj.lookupPart === '몸통') {
              hasBelly = true;
          }
       });
@@ -128,7 +125,7 @@
       const btnRestart = document.getElementById('btn-restart');
       
       function checkCompletion() {
-        const timeComplete = allSymptoms.every(item => state.records[item.recordIndex].startTimes && state.records[item.recordIndex].startTimes[item.symptom]);
+        const timeComplete = allSymptoms.every(item => entries[item.entryIndex].startTimes && entries[item.entryIndex].startTimes[item.symptom]);
         let followUpComplete = true;
         if (needFollowUp) {
           const visibleQs = document.querySelectorAll('#follow-up-container > div:not(.hidden)');
@@ -147,13 +144,15 @@
       }
 
       allSymptoms.forEach(item => {
-        const { id, partName, symptom, recordIndex } = item;
-        const translatedSymptom = translateKoToLang(symptom, state.lang);
-        
+        const { id, partName, symptom, entryIndex } = item;
+        const entry = entries[entryIndex];
+        const translatedSymptom = escapeHtml(translateKoToLang(symptom, state.lang));
+
         let translatedPart = partName;
         const t = translations[state.lang] || translations['ko'];
         if (t[partName]) translatedPart = t[partName];
-        else if (t[state.records[recordIndex].partObj.id]) translatedPart = t[state.records[recordIndex].partObj.id];
+        else if (t[entry.partObj.id]) translatedPart = t[entry.partObj.id];
+        translatedPart = escapeHtml(translatedPart);
         
         // 다친 증상만 원인 질문 ('멍해요'는 다친 게 아니므로 제외)
         const isTrauma = /다침|피가|코피|멍이|멍들|삐었|까졌|부딪|부었|데었|끼였/.test(symptom);
@@ -161,7 +160,7 @@
         let followUpHtml = '';
         if (isTrauma) {
             followUpHtml = `
-              <div class="follow-up-box" data-record-index="${recordIndex}" data-symptom="${symptom}" style="margin-top:1rem; padding:1rem; background:#FFFBEB; border:1px solid #FCD34D; border-radius:8px;">
+              <div class="follow-up-box" data-entry-index="${entryIndex}" data-symptom="${escapeHtml(symptom)}" style="margin-top:1rem; padding:1rem; background:#FFFBEB; border:1px solid #FCD34D; border-radius:8px;">
                 <p style="font-weight:bold; margin-bottom:0.5rem; color:#B45309;" data-i18n="follow_trauma">어떻게 다쳤나요?</p>
                 <div class="symptoms-grid single-select trauma-grid" style="grid-template-columns: repeat(1, 1fr); gap: 0.5rem;">
                   <button class="symptom-card" data-trauma="trauma_friend"><span class="text" data-i18n="trauma_friend">친구랑 장난치다</span></button>
@@ -178,7 +177,7 @@
         block.style.width = '100%';
         block.innerHTML = `
           <h3 style="text-align: center; color: var(--primary); margin-bottom: 1rem;"><span style="font-size: 0.9em; color: var(--text-sub);">[${translatedPart}]</span><br>${translatedSymptom}</h3>
-          <div class="symptoms-grid single-select time-grid" style="grid-template-columns: repeat(3, 1fr); gap: 0.5rem;" data-id="${id}" data-record-index="${recordIndex}" data-symptom="${symptom}">
+          <div class="symptoms-grid single-select time-grid" style="grid-template-columns: repeat(3, 1fr); gap: 0.5rem;" data-id="${id}" data-entry-index="${entryIndex}" data-symptom="${escapeHtml(symptom)}">
             <button class="symptom-card" data-time="time_before"><span class="emoji">🏠</span><span class="text" data-i18n="time_before" style="font-size:0.9rem;">학교오기 전</span></button>
             <button class="symptom-card" data-time="time_p1"><span class="emoji">1️⃣</span><span class="text" data-i18n="time_p1" style="font-size:0.9rem;">1교시</span></button>
             <button class="symptom-card" data-time="time_p2"><span class="emoji">2️⃣</span><span class="text" data-i18n="time_p2" style="font-size:0.9rem;">2교시</span></button>
@@ -195,9 +194,8 @@
         container.appendChild(block);
 
         // Restore if exists
-        const rRec = state.records[recordIndex];
-        if (rRec.startTimes && rRec.startTimes[symptom]) {
-          const key = Object.keys(translations.ko).find(k => translations.ko[k] === rRec.startTimes[symptom]);
+        if (entry.startTimes && entry.startTimes[symptom]) {
+          const key = Object.keys(translations.ko).find(k => translations.ko[k] === entry.startTimes[symptom]);
           if (key) {
              const btn = block.querySelector(`.symptom-card[data-time="${key}"]`);
              if (btn) btn.classList.add('selected');
@@ -209,15 +207,15 @@
 
       // Trauma cause buttons
       document.querySelectorAll('.follow-up-box').forEach(box => {
-        const rIdx = box.dataset.recordIndex;
+        const entry = entries[box.dataset.entryIndex];
         const symptom = box.dataset.symptom;
         box.querySelectorAll('[data-trauma]').forEach(btn => {
           btn.addEventListener('click', (e) => {
             box.querySelectorAll('[data-trauma]').forEach(b => b.classList.remove('selected'));
             e.currentTarget.classList.add('selected');
             const traumaKey = e.currentTarget.dataset.trauma;
-            state.records[rIdx].traumaCauses = state.records[rIdx].traumaCauses || {};
-            state.records[rIdx].traumaCauses[symptom] = translations.ko[traumaKey] || traumaKey;
+            entry.traumaCauses = entry.traumaCauses || {};
+            entry.traumaCauses[symptom] = translations.ko[traumaKey] || traumaKey;
             saveState(state);
             checkCompletion();
           });
@@ -226,14 +224,14 @@
 
       document.querySelectorAll('.time-grid').forEach(tg => {
         const symptom = tg.dataset.symptom;
-        const rIdx = tg.dataset.recordIndex;
+        const entry = entries[tg.dataset.entryIndex];
         tg.querySelectorAll('.symptom-card').forEach(btn => {
           btn.addEventListener('click', (e) => {
             tg.querySelectorAll('.symptom-card').forEach(b => b.classList.remove('selected'));
             e.currentTarget.classList.add('selected');
             const key = e.currentTarget.dataset.time;
-            state.records[rIdx].startTimes = state.records[rIdx].startTimes || {};
-            state.records[rIdx].startTimes[symptom] = translations.ko[key] || "잘 모르겠어요";
+            entry.startTimes = entry.startTimes || {};
+            entry.startTimes[symptom] = translations.ko[key] || "잘 모르겠어요";
             saveState(state);
             
             if (needFollowUp) {
@@ -250,15 +248,15 @@
           parent.querySelectorAll('.symptom-card').forEach(b => b.classList.remove('selected'));
           e.currentTarget.classList.add('selected');
           
-          state.followups = [];
-          if (document.querySelector('[data-follow="belly_yes"].selected')) state.followups.push({q: "밥을 먹었어요?", a: "네"});
-          if (document.querySelector('[data-follow="belly_no"].selected')) state.followups.push({q: "밥을 먹었어요?", a: "아니요"});
-          if (document.querySelector('[data-follow="fever_yes"].selected')) state.followups.push({q: "약을 먹었어요?", a: "네"});
-          if (document.querySelector('[data-follow="fever_no"].selected')) state.followups.push({q: "약을 먹었어요?", a: "아니요"});
+          const followups = state.visit.followups = [];
+          if (document.querySelector('[data-follow="belly_yes"].selected')) followups.push({q: "밥을 먹었어요?", a: "네"});
+          if (document.querySelector('[data-follow="belly_no"].selected')) followups.push({q: "밥을 먹었어요?", a: "아니요"});
+          if (document.querySelector('[data-follow="fever_yes"].selected')) followups.push({q: "약을 먹었어요?", a: "네"});
+          if (document.querySelector('[data-follow="fever_no"].selected')) followups.push({q: "약을 먹었어요?", a: "아니요"});
           if (document.querySelector('[data-follow^="vomit_"].selected')) {
             const v = document.querySelector('[data-follow^="vomit_"].selected').dataset.follow.replace('vomit_', '');
             const map = { "1": "1번", "2": "2번", "3": "3번 이상"};
-            state.followups.push({q: "몇 번 토했어요?", a: map[v]});
+            followups.push({q: "몇 번 토했어요?", a: map[v]});
           }
           saveState(state);
           checkCompletion();
@@ -267,7 +265,7 @@
 
       // 다시 들어온 경우 이미 고른 답(다친 원인, 추가 질문)을 화면에 다시 표시
       document.querySelectorAll('.follow-up-box').forEach(box => {
-        const tc = (state.records[box.dataset.recordIndex].traumaCauses || {})[box.dataset.symptom];
+        const tc = (entries[box.dataset.entryIndex].traumaCauses || {})[box.dataset.symptom];
         const tKey = ['trauma_friend', 'trauma_alone', 'trauma_sports', 'idk'].find(k => translations.ko[k] === tc);
         if (tKey) box.querySelector(`[data-trauma="${tKey}"]`).classList.add('selected');
       });
@@ -277,49 +275,27 @@
         '몇 번 토했어요?': { '1번': 'vomit_1', '2번': 'vomit_2', '3번 이상': 'vomit_3' }
       };
       // 지금 보이는 질문의 답만 남김
-      state.followups = (state.followups || []).filter(f => {
+      state.visit.followups = (state.visit.followups || []).filter(f => {
         const fKey = followKeys[f.q] && followKeys[f.q][f.a];
         const fBtn = fKey && document.querySelector(`#follow-up-container > div:not(.hidden) [data-follow="${fKey}"]`);
         if (fBtn) fBtn.classList.add('selected');
         return !!fBtn;
       });
-      if (needFollowUp && state.records.some(r => r.startTimes && Object.keys(r.startTimes).length > 0)) {
+      if (needFollowUp && entries.some(entry => entry.startTimes && Object.keys(entry.startTimes).length > 0)) {
         fContainer.classList.remove('hidden');
       }
       checkCompletion();
 
-      function saveEntry() {
-        if (state.part) {
-          state.previousEntries.push({
-            part: state.part,
-            bellyPos: state.bellyPos,
-            hurtMethod: state.hurtMethod,
-            hurtState: state.hurtState,
-            headQ: state.headQ,
-            symptoms: state.symptoms,
-            painLevels: state.painLevels,
-            startTimes: state.startTimes,
-            followups: state.followups
-          });
-        }
-      }
-
+      // 다른 곳도 아파요: 이번 회차 기록을 방문 기록으로 옮기고 새 부위 고르기 (추가 질문 답은 다시 들어오면 복원됨)
       btnRestart.addEventListener('click', () => {
-        saveEntry();
-        // Reset only current part fields, keep previousEntries and allergies
-        state.part = null; state.bellyPos = null; state.hurtMethod = null; state.hurtState = null;
-        state.headQ = null; state.symptoms = []; state.painLevels = {}; state.startTimes = {}; state.followups = []; state.headSubSelected = false;
-        state.sideSelect = null; state.sideSelected = false; state.sideLabel = null;
+        if (state.current) state.visit.entries.push(...state.current.done);
+        state.current = null;
         saveState(state);
         window.location.href = 'step1.html';
       });
 
+      // 다음: 이번 회차 기록은 그대로 둠 (step5가 allEntries로 모두 읽고, 알레르기에서 돌아와 이전을 누를 수 있게)
       btnNext.addEventListener('click', () => {
-        saveEntry();
-        // Reset current fields (followups는 step5에서 쓰므로 유지)
-        state.part = null; state.bellyPos = null; state.hurtMethod = null; state.hurtState = null;
-        state.headQ = null; state.symptoms = []; state.painLevels = {}; state.startTimes = {}; state.headSubSelected = false;
-        state.sideSelect = null; state.sideSelected = false; state.sideLabel = null;
         saveState(state);
         window.location.href = 'step4_allergy.html';
       });

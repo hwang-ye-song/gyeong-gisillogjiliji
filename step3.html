@@ -46,26 +46,29 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
-      if (!state.currentPartObj || !state.symptoms || state.symptoms.length === 0) { window.location.href = 'step1.html'; return; }
-      
-      state.painLevels = state.painLevels || {};
-      
+      const cur = state.current;
+      if (!cur) { window.location.href = 'step1.html'; return; }
+      // 기기 뒤로 가기로 온 경우: 남은 부위가 있으면 증상 선택, 이번 회차를 다 끝냈으면 step4로 (끝낸 기록이 버려지지 않게)
+      if (!cur.partObj || !cur.queue) { window.location.href = (cur.queue && cur.queue.length) ? 'step2.html' : (cur.done.length ? 'step4.html' : 'step1.html'); return; }
+      // 고른 증상이 없으면 증상 선택으로
+      if (cur.symptoms.length === 0) { window.location.href = 'step2.html'; return; }
+
       const container = document.getElementById('pain-list-container');
       const btnNext = document.getElementById('btn-next');
-      
+
       function checkCompletion() {
-        btnNext.disabled = !state.symptoms.every(s => state.painLevels[s] !== undefined);
+        btnNext.disabled = !cur.symptoms.every(s => cur.painLevels[s] !== undefined);
       }
 
-      state.symptoms.forEach(symptom => {
-        const translatedSymptom = translateKoToLang(symptom, state.lang);
+      cur.symptoms.forEach(symptom => {
+        const translatedSymptom = escapeHtml(translateKoToLang(symptom, state.lang));
         const block = document.createElement('div');
         block.className = 'symptom-pain-block';
         block.style.marginBottom = '2rem';
         block.style.width = '100%';
         block.innerHTML = `
           <h3 style="text-align: center; color: var(--primary); margin-bottom: 1rem;">${translatedSymptom}</h3>
-          <div class="faces-container" data-symptom="${symptom}">
+          <div class="faces-container" data-symptom="${escapeHtml(symptom)}">
             <button class="face-btn" data-pain="0"><div class="emoji">😄</div><div class="label">0</div></button>
             <button class="face-btn" data-pain="2"><div class="emoji">🙂</div><div class="label">2</div></button>
             <button class="face-btn" data-pain="4"><div class="emoji">😐</div><div class="label">4</div></button>
@@ -80,8 +83,9 @@
         container.appendChild(block);
         
         // Restore state if exists
-        if (state.painLevels[symptom] !== undefined) {
-          block.querySelector(`.face-btn[data-pain="${state.painLevels[symptom]}"]`).classList.add('selected');
+        if (cur.painLevels[symptom] !== undefined) {
+          const faceBtn = block.querySelector(`.face-btn[data-pain="${cur.painLevels[symptom]}"]`);
+          if (faceBtn) faceBtn.classList.add('selected');
         }
       });
       
@@ -93,7 +97,7 @@
           btn.addEventListener('click', (e) => {
             fc.querySelectorAll('.face-btn').forEach(b => b.classList.remove('selected'));
             e.currentTarget.classList.add('selected');
-            state.painLevels[symptom] = e.currentTarget.dataset.pain;
+            cur.painLevels[symptom] = e.currentTarget.dataset.pain;
             saveState(state);
             checkCompletion();
           });
@@ -104,29 +108,33 @@
 
       btnNext.addEventListener('click', () => {
         // 두 번 눌러 빈 기록이 추가되지 않도록 한 번만 처리
-        if (btnNext.disabled || !state.currentPartObj) return;
+        if (btnNext.disabled || !cur.partObj) return;
         btnNext.disabled = true;
 
-        // Save to records
-        state.records.push({
-            partObj: state.currentPartObj,
-            symptoms: [...state.symptoms],
+        // 이번 회차에서 끝낸 기록에 추가 (언제부터·다친 원인은 step4에서 채움)
+        cur.done.push({
+            partObj: cur.partObj,
+            symptoms: [...cur.symptoms],
             // 지금 선택된 증상의 통증만 저장 (해제한 증상의 통증이 남지 않게)
-            painLevels: Object.fromEntries(state.symptoms.map(s => [s, state.painLevels[s]]))
+            painLevels: Object.fromEntries(cur.symptoms.map(s => [s, cur.painLevels[s]])),
+            headQ: cur.headQ,
+            startTimes: {},
+            traumaCauses: {}
         });
-        
+
         // Remove completed part from queue
-        state.partsQueue.shift();
-        
+        cur.queue.shift();
+
         // Clear temp state for next part
-        state.symptoms = [];
-        state.painLevels = {};
-        state.currentPartObj = null;
-        
+        cur.partObj = null;
+        cur.symptoms = [];
+        cur.painLevels = {};
+        cur.headQ = null;
+
         saveState(state);
-        
+
         // Loop back to step2 if more parts, otherwise go to step4
-        if (state.partsQueue.length > 0) {
+        if (cur.queue.length > 0) {
             window.location.href = 'step2.html';
         } else {
             window.location.href = 'step4.html';

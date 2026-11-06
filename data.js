@@ -1287,6 +1287,24 @@ const translations = {
         belly_chest: "الصدر", profile_title: "أدخل بياناتك", profile_grade: "الصف", profile_class: "الفصل", profile_number: "الرقم", profile_name: "الاسم", profile_placeholder: "اكتب", profile_next: "التالي"
     },
   };
+
+  // 나중에 추가된 화면 문구 (확인 버튼, 알레르기 음성 입력, 알레르기 '잘 모르겠어요')
+  // ⚠️ km/th/mn/uz/ar 등은 원어민 검수 전 번역이므로 검수 후 고칠 것
+  const extraTranslations = {
+    ko: { allergy_idk: "잘 모르겠어요", btn_confirm: "확인 ✔️", btn_cancel: "취소", voice_listening: "마이크에 대고 말해 주세요...", voice_paused: "마이크가 기다리고 있어요.", voice_paused_hint: "(다 말했으면 [✅ 말하기 완료]를 누르세요)", voice_analyzing: "AI가 분석 중이에요... 🤖", voice_confirm_q: "아래 알레르기가 맞나요? (터치해서 선택/해제)", voice_add: "선택한 항목 추가하기", voice_finish: "말하기 완료", voice_retry: "다시 말하기", voice_error: "인식 오류: ", voice_empty: "들린 말이 없어요 😢", voice_not_found: "알레르기를 찾지 못했어요 😢", voice_again: "다시 한 번 말해 줄래요?", voice_fail: "오류가 났어요. 다시 해 주세요.", voice_done: "분석 완료! (터치해서 선택/해제)" },
+    en: { allergy_idk: "I don't know", btn_confirm: "OK ✔️", btn_cancel: "Cancel", voice_listening: "Please speak into the microphone...", voice_paused: "The microphone is waiting.", voice_paused_hint: "(When you are done, press [✅ Done speaking])", voice_analyzing: "AI is checking... 🤖", voice_confirm_q: "Are these your allergies? (Tap to select/unselect)", voice_add: "Add selected items", voice_finish: "Done speaking", voice_retry: "Speak again", voice_error: "Recognition error: ", voice_empty: "I didn't hear anything 😢", voice_not_found: "No allergies found 😢", voice_again: "Can you say it one more time?", voice_fail: "Something went wrong. Please try again.", voice_done: "Done! (Tap to select/unselect)" },
+    zh: { allergy_idk: "不知道", btn_confirm: "确认 ✔️", btn_cancel: "取消", voice_listening: "请对着麦克风说话...", voice_paused: "麦克风在等待中。", voice_paused_hint: "(说完后请按 [✅ 说完了])", voice_analyzing: "AI正在分析... 🤖", voice_confirm_q: "下面是你的过敏吗？(点击选择/取消)", voice_add: "添加选中的项目", voice_finish: "说完了", voice_retry: "重新说", voice_error: "识别错误: ", voice_empty: "没有听到声音 😢", voice_not_found: "没有找到过敏 😢", voice_again: "能再说一遍吗？", voice_fail: "出错了，请再试一次。", voice_done: "分析完成！(点击选择/取消)" },
+    ru: { allergy_idk: "Не знаю", btn_confirm: "OK ✔️", btn_cancel: "Отмена", voice_listening: "Говори в микрофон...", voice_paused: "Микрофон ждёт.", voice_paused_hint: "(Когда закончишь, нажми [✅ Готово])", voice_analyzing: "ИИ проверяет... 🤖", voice_confirm_q: "Это твоя аллергия? (Нажми, чтобы выбрать/убрать)", voice_add: "Добавить выбранное", voice_finish: "Готово", voice_retry: "Сказать ещё раз", voice_error: "Ошибка распознавания: ", voice_empty: "Ничего не слышно 😢", voice_not_found: "Аллергия не найдена 😢", voice_again: "Можешь сказать ещё раз?", voice_fail: "Произошла ошибка. Попробуй ещё раз.", voice_done: "Готово! (Нажми, чтобы выбрать/убрать)" },
+    vi: { allergy_idk: "Không biết", btn_confirm: "Xác nhận ✔️", btn_cancel: "Hủy", voice_listening: "Hãy nói vào micro...", voice_paused: "Micro đang chờ.", voice_paused_hint: "(Nói xong thì bấm [✅ Nói xong])", voice_analyzing: "AI đang phân tích... 🤖", voice_confirm_q: "Đây có phải là dị ứng của em không? (Chạm để chọn/bỏ chọn)", voice_add: "Thêm mục đã chọn", voice_finish: "Nói xong", voice_retry: "Nói lại", voice_error: "Lỗi nhận dạng: ", voice_empty: "Không nghe thấy gì 😢", voice_not_found: "Không tìm thấy dị ứng 😢", voice_again: "Em nói lại một lần nữa được không?", voice_fail: "Có lỗi xảy ra. Hãy thử lại.", voice_done: "Xong! (Chạm để chọn/bỏ chọn)" },
+    ja: { allergy_idk: "わからない", btn_confirm: "OK ✔️", btn_cancel: "やめる", voice_listening: "マイクにむかって話してね...", voice_paused: "マイクがまっています。", voice_paused_hint: "(話しおわったら [✅ 話しおわった] をおしてね)", voice_analyzing: "AIがしらべています... 🤖", voice_confirm_q: "このアレルギーであってる? (タッチしてえらぶ/けす)", voice_add: "えらんだものをついか", voice_finish: "話しおわった", voice_retry: "もう一回話す", voice_error: "にんしきエラー: ", voice_empty: "声がきこえなかったよ 😢", voice_not_found: "アレルギーが見つからなかったよ 😢", voice_again: "もう一回言ってくれる?", voice_fail: "エラーがおきました。もう一回やってね。", voice_done: "できた! (タッチしてえらぶ/けす)" },
+    tl: { allergy_idk: "Hindi ko alam", btn_confirm: "OK ✔️", btn_cancel: "Kanselahin", voice_listening: "Magsalita sa mikropono...", voice_paused: "Naghihintay ang mikropono.", voice_paused_hint: "(Kapag tapos na, pindutin ang [✅ Tapos na])", voice_analyzing: "Sinusuri ng AI... 🤖", voice_confirm_q: "Ito ba ang allergy mo? (Pindutin para piliin/alisin)", voice_add: "Idagdag ang napili", voice_finish: "Tapos na", voice_retry: "Magsalita ulit", voice_error: "Error sa pagkilala: ", voice_empty: "Walang narinig 😢", voice_not_found: "Walang nakitang allergy 😢", voice_again: "Puwede mo bang ulitin?", voice_fail: "May error. Subukan ulit.", voice_done: "Tapos! (Pindutin para piliin/alisin)" },
+    km: { allergy_idk: "ខ្ញុំមិនដឹងទេ", btn_confirm: "យល់ព្រម ✔️", btn_cancel: "បោះបង់", voice_listening: "សូមនិយាយចូលមីក្រូហ្វូន...", voice_paused: "មីក្រូហ្វូនកំពុងរង់ចាំ។", voice_paused_hint: "(និយាយចប់ហើយ សូមចុច [✅ និយាយចប់])", voice_analyzing: "AI កំពុងពិនិត្យ... 🤖", voice_confirm_q: "តើនេះជាអាឡែស៊ីរបស់អ្នកមែនទេ? (ចុចដើម្បីជ្រើស/ដកចេញ)", voice_add: "បន្ថែមអ្វីដែលបានជ្រើស", voice_finish: "និយាយចប់", voice_retry: "និយាយម្តងទៀត", voice_error: "កំហុសក្នុងការស្គាល់សំឡេង: ", voice_empty: "មិនឮអ្វីទេ 😢", voice_not_found: "រកមិនឃើញអាឡែស៊ីទេ 😢", voice_again: "តើអាចនិយាយម្តងទៀតបានទេ?", voice_fail: "មានបញ្ហា។ សូមព្យាយាមម្តងទៀត។", voice_done: "រួចរាល់! (ចុចដើម្បីជ្រើស/ដកចេញ)" },
+    th: { allergy_idk: "ไม่รู้", btn_confirm: "ตกลง ✔️", btn_cancel: "ยกเลิก", voice_listening: "พูดใส่ไมโครโฟนได้เลย...", voice_paused: "ไมโครโฟนกำลังรอ", voice_paused_hint: "(พูดเสร็จแล้วกด [✅ พูดเสร็จแล้ว])", voice_analyzing: "AI กำลังตรวจสอบ... 🤖", voice_confirm_q: "นี่คือสิ่งที่แพ้ใช่ไหม? (แตะเพื่อเลือก/ยกเลิก)", voice_add: "เพิ่มรายการที่เลือก", voice_finish: "พูดเสร็จแล้ว", voice_retry: "พูดอีกครั้ง", voice_error: "จดจำเสียงผิดพลาด: ", voice_empty: "ไม่ได้ยินเสียง 😢", voice_not_found: "ไม่พบอาการแพ้ 😢", voice_again: "พูดอีกครั้งได้ไหม?", voice_fail: "เกิดข้อผิดพลาด ลองอีกครั้งนะ", voice_done: "เสร็จแล้ว! (แตะเพื่อเลือก/ยกเลิก)" },
+    mn: { allergy_idk: "Мэдэхгүй", btn_confirm: "За ✔️", btn_cancel: "Болих", voice_listening: "Микрофон руу ярина уу...", voice_paused: "Микрофон хүлээж байна.", voice_paused_hint: "(Ярьж дуусвал [✅ Ярьж дууслаа] дарна уу)", voice_analyzing: "AI шалгаж байна... 🤖", voice_confirm_q: "Энэ таны харшил мөн үү? (Дарж сонгох/болиулах)", voice_add: "Сонгосныг нэмэх", voice_finish: "Ярьж дууслаа", voice_retry: "Дахин ярих", voice_error: "Танихад алдаа гарлаа: ", voice_empty: "Юу ч сонсогдсонгүй 😢", voice_not_found: "Харшил олдсонгүй 😢", voice_again: "Дахин нэг хэлж өгөх үү?", voice_fail: "Алдаа гарлаа. Дахин оролдоно уу.", voice_done: "Боллоо! (Дарж сонгох/болиулах)" },
+    uz: { allergy_idk: "Bilmayman", btn_confirm: "OK ✔️", btn_cancel: "Bekor qilish", voice_listening: "Mikrofonga gapiring...", voice_paused: "Mikrofon kutmoqda.", voice_paused_hint: "(Gapirib bo'lgach, [✅ Tugatdim] tugmasini bosing)", voice_analyzing: "AI tekshirmoqda... 🤖", voice_confirm_q: "Bu sizning allergiyangizmi? (Tanlash/olib tashlash uchun bosing)", voice_add: "Tanlanganlarni qo'shish", voice_finish: "Tugatdim", voice_retry: "Qayta gapirish", voice_error: "Tanishda xato: ", voice_empty: "Hech narsa eshitilmadi 😢", voice_not_found: "Allergiya topilmadi 😢", voice_again: "Yana bir marta ayta olasizmi?", voice_fail: "Xato yuz berdi. Qayta urinib ko'ring.", voice_done: "Tayyor! (Tanlash/olib tashlash uchun bosing)" },
+    ar: { allergy_idk: "لا أعرف", btn_confirm: "موافق ✔️", btn_cancel: "إلغاء", voice_listening: "تحدث في الميكروفون...", voice_paused: "الميكروفون ينتظر.", voice_paused_hint: "(عندما تنتهي، اضغط [✅ انتهيت])", voice_analyzing: "الذكاء الاصطناعي يتحقق... 🤖", voice_confirm_q: "هل هذه حساسيتك؟ (اضغط للاختيار/الإلغاء)", voice_add: "أضف ما اخترته", voice_finish: "انتهيت", voice_retry: "تحدث مرة أخرى", voice_error: "خطأ في التعرف: ", voice_empty: "لم أسمع شيئاً 😢", voice_not_found: "لم يتم العثور على حساسية 😢", voice_again: "هل يمكنك قولها مرة أخرى؟", voice_fail: "حدث خطأ. حاول مرة أخرى.", voice_done: "تم! (اضغط للاختيار/الإلغاء)" }
+  };
+  for (const l in extraTranslations) Object.assign(translations[l], extraTranslations[l]);
   
   const tts_codes = { ko: "ko-KR", en: "en-US", zh: "zh-CN", ru: "ru-RU", vi: "vi-VN", ja: "ja-JP", tl: "tl-PH", km: "km-KH", th: "th-TH", mn: "mn-MN", uz: "uz-UZ", ar: "ar-SA" };
   
@@ -1511,9 +1529,46 @@ const translations = {
   };
 
   // State Management Helpers
+  // state = { lang, visit: DB 한 줄에 들어갈 내용, current: 몸 그림에서 한 번 고른 부위(회차)를 답하는 중 }
+  function newVisit() {
+      return { grade: '', class_num: '', student_num: '', entries: [], followups: [], allergies: [], medications: [] };
+  }
+
+  // 몸 그림을 누를 때마다 새 회차 (part: 고른 부위의 한국어 이름)
+  function newRound(part) {
+      return {
+          part: part,
+          sub: { side: null, sideSelected: false, sideLabel: null, headSub: false },
+          queue: null,      // 아직 물어볼 부위 (배·팔 묶음), 없으면 step2가 하나로 만듦
+          partObj: null,    // 지금 묻는 부위
+          symptoms: [], painLevels: {}, headQ: null,
+          done: []          // 이번 회차에서 끝낸 부위 기록 (step3가 추가)
+      };
+  }
+
+  // 이번 회차를 부위 고르기부터 다시 (답하던 내용과 이번 회차에 먼저 끝낸 기록도 비움)
+  function restartRound(current) {
+      current.queue = null;
+      current.partObj = null;
+      current.symptoms = [];
+      current.painLevels = {};
+      current.headQ = null;
+      current.done = [];
+  }
+
   function getState() {
-      const defaultState = { lang: 'ko', part: null, bellyPos: null, hurtMethod: null, hurtState: null, headQ: null, symptoms: [], painLevels: {}, startTime: null, followups: [], previousEntries: [], headSubSelected: false };
-      return JSON.parse(sessionStorage.getItem('medical_state')) || defaultState;
+      let state = null;
+      try { state = JSON.parse(sessionStorage.getItem('medical_state')); } catch (e) { state = null; }
+      // 없거나 예전 형식이면 새로 시작 (언어는 유지)
+      if (!state || typeof state !== 'object' || !state.visit) {
+          return { lang: (state && state.lang) || 'ko', visit: newVisit(), current: null };
+      }
+      return state;
+  }
+
+  // 끝낸 부위 기록 전체 (앞 회차 + 이번 회차), 같은 객체를 돌려주므로 고친 뒤 saveState로 저장됨
+  function allEntries(state) {
+      return [...state.visit.entries, ...(state.current ? state.current.done : [])];
   }
 
   function saveState(state) {

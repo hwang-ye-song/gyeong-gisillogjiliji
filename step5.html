@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>그림 터치 문진표 - 제출 확인</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
   <style>
     .entry-summary {
       border: 2px solid var(--secondary);
@@ -70,11 +70,14 @@
         window.location.href = 'step4_allergy.html';
       });
 
-      if (!state.records || state.records.length === 0) { window.location.href = 'step1.html'; return; }
+      // 끝낸 부위 기록 전체 (앞 회차 + 이번 회차)
+      const list = allEntries(state);
+      if (list.length === 0) { window.location.href = 'step1.html'; return; }
 
       const container = document.getElementById('summary-container');
-      
-      let allEntries = state.records.map((r, idx) => {
+
+      // DB entries_json 형태로 바꿈
+      const entries = list.map((r, idx) => {
           const bellyPos = r.partObj.name !== r.partObj.lookupPart ? r.partObj.name : null;
           const areas = r.partObj.areas || [];
           // 묶음 이름(윗배 전체, 왼쪽 팔 여러 부위 등)이 실제로 고른 구역과 다르면 고른 구역을 그대로 나열
@@ -93,12 +96,12 @@
               traumaCauses: r.traumaCauses || {},
               headQ: r.headQ === undefined ? null : r.headQ,
               // 추가 질문은 모든 부위 공통이므로 첫 번째 기록에만 저장
-              followups: idx === 0 ? (state.followups || []) : []
+              followups: idx === 0 ? (state.visit.followups || []) : []
           };
       });
 
 
-      container.innerHTML = allEntries.map((e, idx) => {
+      container.innerHTML = entries.map((e, idx) => {
         const lang = state.lang || 'ko';
         const t = translations[lang] || translations.ko;
         
@@ -132,18 +135,18 @@
 
 
       // Add medication info
-      if (state.medications && state.medications.length > 0) {
+      if (state.visit.medications && state.visit.medications.length > 0) {
         const lang = state.lang || 'ko';
         const t = translations[lang] || translations.ko;
-        const medLabels = state.medications.map(m => escapeHtml(translateKoToLang(translations.ko[m] || m, state.lang))).join(', ');
+        const medLabels = state.visit.medications.map(m => escapeHtml(translateKoToLang(translations.ko[m] || m, state.lang))).join(', ');
         container.innerHTML += `<div class="entry-summary"><h3>${t.summary_med_info || '💊 복용 중인 약'}</h3><div class="summary-item"><strong>${t.summary_med_label || '복용 약'}:</strong> <span>${medLabels}</span></div></div>`;
       }
 
       // Add allergy info (shared across all entries)
-      if (state.allergies && state.allergies.length > 0) {
+      if (state.visit.allergies && state.visit.allergies.length > 0) {
         const lang = state.lang || 'ko';
         const t = translations[lang] || translations.ko;
-        const allergyLabels = state.allergies.map(a => {
+        const allergyLabels = state.visit.allergies.map(a => {
            if (a.startsWith('custom_')) return escapeHtml(a.substring(7)); // "custom_새우" -> "새우"
            return escapeHtml(translateKoToLang(translations.ko[a] || a, state.lang));
         }).join(', ');
@@ -158,13 +161,13 @@
         if (submitBtn.disabled) return;
         submitBtn.disabled = true;
 
-        const flags = evaluateEmergency(allEntries);
-        const finalEntries = allEntries;
-        
+        const flags = evaluateEmergency(entries);
+        const finalEntries = entries;
+
         // DB 스키마 에러 방지: allergies를 별도 컬럼이 아닌 entries_json 내부에 저장
         if (finalEntries.length > 0) {
-          finalEntries[0].allergies = state.allergies || [];
-          finalEntries[0].medications = state.medications || [];
+          finalEntries[0].allergies = state.visit.allergies || [];
+          finalEntries[0].medications = state.visit.medications || [];
         }
 
         // 로컬 큐에 추가 (db.js가 백그라운드에서 처리함)
@@ -173,9 +176,9 @@
           // 큐에서 이 기록만 골라 지우기 위한 번호 (DB 컬럼이 아니라 db.js가 보내기 전에 뺌)
           local_id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
           lang: state.lang,
-          grade: state.grade,
-          class_num: state.class_num,
-          student_num: state.student_num,
+          grade: state.visit.grade,
+          class_num: state.visit.class_num,
+          student_num: state.visit.student_num,
           entries_json: finalEntries,
           emergency_flags: Array.from(flags),
           created_at: new Date().toISOString(),

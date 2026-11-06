@@ -97,7 +97,7 @@
       </div>
       
             <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-        <button id="btn-belly-done" class="btn btn-primary" style="display: none; width: 100%;">확인 ✔️</button>
+        <button id="btn-belly-done" class="btn btn-primary" style="display: none; width: 100%;" data-i18n="btn_confirm">확인 ✔️</button>
       </div>
     </div>
 
@@ -111,8 +111,8 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
-      
-      if (!state.part) { window.location.href = 'step1.html'; return; }
+      const cur = state.current;
+      if (!cur) { window.location.href = 'step1.html'; return; }
 
       function updateTitle(i18nKey) {
         const span = document.getElementById('title-span');
@@ -133,7 +133,8 @@
       updateTitle('part_arm');
       showFlow('belly-pos-flow');
       
-      // 구역을 터치해 선택/해제 (여러 곳 선택 가능)
+      // 구역을 터치해 선택/해제 (여러 곳 선택 가능), 확인을 누를 때 대기열로 저장
+      let selectedQueue = null;
       const updateQueue = () => {
         const allActive = [];
         document.querySelectorAll('.belly-area').forEach(el => {
@@ -184,14 +185,14 @@
             const leftParts = allActive.filter(id => id.includes('arm_left_'));
             const rightParts = allActive.filter(id => id.includes('arm_right_'));
             
-            state.partsQueue = [
+            selectedQueue = [
                 ...groupSide(leftParts, 'arm_left_', '왼쪽'),
                 ...groupSide(rightParts, 'arm_right_', '오른쪽')
             ];
-            
+
             document.getElementById('btn-belly-done').style.display = 'block';
         } else {
-            state.partsQueue = null;
+            selectedQueue = null;
             document.getElementById('btn-belly-done').style.display = 'none';
         }
       };
@@ -203,8 +204,11 @@
         });
       });
 
+      // 고른 구역으로 이번 회차를 새로 시작 (step2에서 돌아와 다시 고른 경우 포함)
       document.getElementById('btn-belly-done').onclick = () => {
-        if (state.partsQueue && state.partsQueue.length > 0) {
+        if (selectedQueue && selectedQueue.length > 0) {
+          restartRound(cur);
+          cur.queue = selectedQueue;
           saveState(state);
           window.location.href = 'step2.html';
         }
@@ -212,35 +216,15 @@
 
       // I don't know button
       document.querySelector('.btn-idk').addEventListener('click', () => {
-        if (state.part === translations.ko['part_head']) {
-          state.headSubSelected = true;
-        } else if (state.part === translations.ko['part_belly'] || state.part === translations.ko['part_arm']) {
-            state.partsQueue = [{ id: 'idk', name: translations.ko['idk'], lookupPart: '팔·손' }];
-        } else if (state.sideSelect) {
-          if (!state.sideSelected) {
-             state.sideSelected = true;
-             state.sideLabel = translations.ko['idk'];
-             saveState(state);
-             location.reload();
-             return;
-          } else {
-             state.part = `${state.sideSelect === 'arm' ? '팔·손' : '다리·발'} (${state.sideLabel} ${translations.ko['idk']})`;
-          }
-        }
+        restartRound(cur);
+        cur.queue = [{ id: 'idk', name: translations.ko['idk'], lookupPart: '팔·손' }];
         saveState(state);
         window.location.href = 'step2.html';
       });
 
       // Back Button
       document.getElementById('btn-back').addEventListener('click', () => {
-        if (state.sideSelect && state.sideSelected) {
-          state.sideSelected = false;
-          state.sideLabel = null;
-          saveState(state);
-          location.reload();
-        } else {
-          window.location.href = 'step1.html';
-        }
+        window.location.href = 'step1.html';
       });
 
       applyLanguageToUI();

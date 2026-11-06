@@ -95,7 +95,7 @@
     </button>
   </nav>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
   <script src="data.js"></script>
   <script src="db.js"></script>
   <script>
@@ -110,9 +110,9 @@
       });
 
       // Restore values if previously entered
-      if (state.grade) document.getElementById('input-grade').value = state.grade;
-      if (state.class_num) document.getElementById('input-class').value = state.class_num;
-      if (state.student_num) document.getElementById('input-number').value = state.student_num;
+      if (state.visit.grade) document.getElementById('input-grade').value = state.visit.grade;
+      if (state.visit.class_num) document.getElementById('input-class').value = state.visit.class_num;
+      if (state.visit.student_num) document.getElementById('input-number').value = state.visit.student_num;
 
       // 입력하면 빨간 표시 해제
       document.querySelectorAll('.form-group input').forEach(input => {
@@ -133,9 +133,9 @@
         }
 
         let state = getState();
-        state.grade = document.getElementById('input-grade').value;
-        state.class_num = document.getElementById('input-class').value;
-        state.student_num = document.getElementById('input-number').value;
+        state.visit.grade = document.getElementById('input-grade').value;
+        state.visit.class_num = document.getElementById('input-class').value;
+        state.visit.student_num = document.getElementById('input-number').value;
 
         saveState(state);
         window.location.href = 'step1.html';

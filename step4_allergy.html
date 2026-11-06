@@ -58,21 +58,21 @@
     <!-- Voice Recognition Modal -->
     <div id="voice-modal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; display:none; align-items:center; justify-content:center; flex-direction:column; color:white;">
       <div style="background:white; color:black; padding:2rem; border-radius:1rem; width:90%; max-width:400px; text-align:center; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-        <div id="voice-status" style="font-size:1.2rem; font-weight:bold; margin-bottom:1rem;">마이크에 대고 말씀해주세요... <span id="mic-icon" class="mic-pulsing">🎤</span></div>
+        <div id="voice-status" style="font-size:1.2rem; font-weight:bold; margin-bottom:1rem;"></div>
         <div id="voice-transcript" style="color:#4B5563; min-height:3rem; margin-bottom:1rem; font-style:italic;"></div>
         
         <div id="voice-cards-container" class="hidden">
-          <p style="margin-bottom:1rem; font-weight:bold; color:#1D4ED8;">아래 알레르기가 맞나요? (터치해서 선택/해제)</p>
+          <p style="margin-bottom:1rem; font-weight:bold; color:#1D4ED8;" data-i18n="voice_confirm_q">아래 알레르기가 맞나요? (터치해서 선택/해제)</p>
           <div id="voice-cards-grid" style="display:flex; flex-wrap:wrap; gap:0.5rem; justify-content:center; margin-bottom:1.5rem;">
             <!-- Cards injected here -->
           </div>
-          <button id="btn-voice-confirm" class="btn btn-primary" style="width:100%; margin-bottom:0.5rem;">선택한 항목 추가하기</button>
+          <button id="btn-voice-confirm" class="btn btn-primary" style="width:100%; margin-bottom:0.5rem;" data-i18n="voice_add">선택한 항목 추가하기</button>
         </div>
         
         <div id="voice-controls">
-          <button id="btn-voice-finish" class="btn btn-primary" style="width:100%; margin-bottom:0.5rem; background-color:#10B981; border-color:#059669;">✅ 말하기 완료</button>
-          <button id="btn-voice-retry" class="btn btn-secondary" style="width:100%; margin-bottom:0.5rem;">다시 말하기</button>
-          <button id="btn-voice-cancel" class="btn" style="width:100%; background:#E5E7EB; color:#374151;">취소</button>
+          <button id="btn-voice-finish" class="btn btn-primary" style="width:100%; margin-bottom:0.5rem; background-color:#10B981; border-color:#059669;">✅ <span data-i18n="voice_finish">말하기 완료</span></button>
+          <button id="btn-voice-retry" class="btn btn-secondary" style="width:100%; margin-bottom:0.5rem;" data-i18n="voice_retry">다시 말하기</button>
+          <button id="btn-voice-cancel" class="btn" style="width:100%; background:#E5E7EB; color:#374151;" data-i18n="btn_cancel">취소</button>
         </div>
       </div>
     </div>
@@ -82,12 +82,13 @@
     </div>
   </section>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js" integrity="sha384-TcHRA3zBbn+Lexh5n+Oil4guNPOS3rjNDpGRAN46u/s/mB2IZ50ceC6TYDU2yvgK" crossorigin="anonymous"></script>
   <script src="db.js"></script>
   <script src="data.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
+      const tr = key => (translations[state.lang] || translations.ko)[key] || translations.ko[key];
       
       document.getElementById('btn-back').addEventListener('click', () => {
         window.location.href = 'step4.html';
@@ -98,15 +99,15 @@
       // ----------------------------------------------------
       // 1. 상태 초기화 및 화면 렌더링 복구
       // ----------------------------------------------------
-      state.allergies = (state.allergies || []).filter(a => typeof a === 'string');
-      state.medications = state.medications || [];
+      state.visit.allergies = (state.visit.allergies || []).filter(a => typeof a === 'string');
+      state.visit.medications = state.visit.medications || [];
 
       // 기존 선택된 알레르기/약물 버튼 UI 반영
-      state.allergies.forEach(a => {
+      state.visit.allergies.forEach(a => {
         const btn = document.querySelector(`[data-allergy="${CSS.escape(a)}"]`);
         if (btn) btn.classList.add('selected');
       });
-      state.medications.forEach(m => {
+      state.visit.medications.forEach(m => {
         const btn = document.querySelector(`[data-med="${CSS.escape(m)}"]`);
         if (btn) btn.classList.add('selected');
       });
@@ -117,7 +118,7 @@
           const b = document.querySelector(`[data-allergy="${k}"]`);
           if (b) b.classList.remove('selected');
         });
-        state.allergies = state.allergies.filter(a => a !== 'allergy_none' && a !== 'allergy_idk');
+        state.visit.allergies = state.visit.allergies.filter(a => a !== 'allergy_none' && a !== 'allergy_idk');
       }
 
       function checkComplete() {
@@ -142,16 +143,16 @@
           if (key === 'allergy_none' || key === 'allergy_idk') {
             document.querySelectorAll('#allergy-grid .symptom-card').forEach(b => b.classList.remove('selected'));
             e.currentTarget.classList.add('selected');
-            state.allergies = [key];
+            state.visit.allergies = [key];
           } else {
             clearExclusiveAllergy();
             
             if (e.currentTarget.classList.contains('selected')) {
               e.currentTarget.classList.remove('selected');
-              state.allergies = state.allergies.filter(a => a !== key);
+              state.visit.allergies = state.visit.allergies.filter(a => a !== key);
             } else {
               e.currentTarget.classList.add('selected');
-              state.allergies.push(key);
+              state.visit.allergies.push(key);
             }
           }
           saveState(state);
@@ -165,20 +166,20 @@
           if (key === 'med_none' || key === 'med_idk') {
             document.querySelectorAll('#medication-grid .symptom-card').forEach(b => b.classList.remove('selected'));
             e.currentTarget.classList.add('selected');
-            state.medications = [key];
+            state.visit.medications = [key];
           } else {
             const noneBtn = document.querySelector('[data-med="med_none"]');
             const idkBtn = document.querySelector('[data-med="med_idk"]');
             if (noneBtn) noneBtn.classList.remove('selected');
             if (idkBtn) idkBtn.classList.remove('selected');
-            state.medications = state.medications.filter(m => m !== 'med_none' && m !== 'med_idk');
+            state.visit.medications = state.visit.medications.filter(m => m !== 'med_none' && m !== 'med_idk');
             
             if (e.currentTarget.classList.contains('selected')) {
               e.currentTarget.classList.remove('selected');
-              state.medications = state.medications.filter(m => m !== key);
+              state.visit.medications = state.visit.medications.filter(m => m !== key);
             } else {
               e.currentTarget.classList.add('selected');
-              state.medications.push(key);
+              state.visit.medications.push(key);
             }
           }
           saveState(state);
@@ -209,7 +210,7 @@
 
       // 이전에 음성으로 추가했던 알레르기(custom_*) 동적 생성 및 복원
       // (btnVoice 선언 뒤, 일반 버튼 이벤트 연결 뒤에 실행해야 함)
-      state.allergies.filter(a => a.startsWith('custom_')).forEach(key => {
+      state.visit.allergies.filter(a => a.startsWith('custom_')).forEach(key => {
         createCustomAllergyButton(key, key.substring(7));
       });
       checkComplete();
@@ -230,11 +231,11 @@
       function updateMicStatus(status) {
         // status: 'listening' | 'paused' | 'analyzing'
         if (status === 'listening') {
-          voiceStatus.innerHTML = '마이크에 대고 말씀해주세요... <span id="mic-icon" class="mic-pulsing">🎤</span>';
+          voiceStatus.innerHTML = tr('voice_listening') + ' <span id="mic-icon" class="mic-pulsing">🎤</span>';
         } else if (status === 'paused') {
-          voiceStatus.innerHTML = '마이크가 대기 중입니다. <span id="mic-icon">⏸️</span><br><small style="font-weight:normal; font-size:0.9rem; color:#6B7280;">(입력을 끝내려면 [✅ 말하기 완료] 버튼을 누르세요)</small>';
+          voiceStatus.innerHTML = tr('voice_paused') + ' <span id="mic-icon">⏸️</span><br><small style="font-weight:normal; font-size:0.9rem; color:#6B7280;">' + tr('voice_paused_hint') + '</small>';
         } else if (status === 'analyzing') {
-          voiceStatus.innerHTML = 'AI가 분석 중입니다... 🤖';
+          voiceStatus.innerHTML = tr('voice_analyzing');
         }
       }
 
@@ -299,7 +300,7 @@
         recognition.onerror = (event) => {
           if (event.error === 'no-speech') return; // 무음 타임아웃 무시
           console.error("Speech recognition error", event.error);
-          voiceStatus.innerText = "인식 오류: " + event.error;
+          voiceStatus.innerText = tr('voice_error') + event.error;
         };
       }
 
@@ -327,7 +328,7 @@
         if (textToProcess) {
           processVoiceText(textToProcess);
         } else {
-          voiceStatus.innerText = "입력된 음성이 없습니다 😢";
+          voiceStatus.innerText = tr('voice_empty');
         }
       });
 
@@ -356,19 +357,19 @@
           if (items.length > 0) {
              showExtractedCards(items);
           } else {
-             voiceStatus.innerText = "알레르기를 찾지 못했어요 😢";
-             voiceTranscript.innerText = "다시 한 번 말씀해 주시겠어요?";
+             voiceStatus.innerText = tr('voice_not_found');
+             voiceTranscript.innerText = tr('voice_again');
              voiceControls.classList.remove('hidden');
           }
         } catch(e) {
           console.error("AI Extraction Error", e);
-          voiceStatus.innerText = "분석 중 오류가 발생했습니다. 다시 시도해주세요.";
+          voiceStatus.innerText = tr('voice_fail');
           voiceControls.classList.remove('hidden');
         }
       }
 
       function showExtractedCards(allergies) {
-        voiceStatus.innerText = "분석 완료! (터치해서 선택/해제)";
+        voiceStatus.innerText = tr('voice_done');
         voiceCardsContainer.classList.remove('hidden');
         voiceCardsGrid.innerHTML = '';
         
@@ -407,8 +408,8 @@
            
            createCustomAllergyButton(key, displayTxt);
            
-           if (!state.allergies.includes(key)) {
-             state.allergies.push(key);
+           if (!state.visit.allergies.includes(key)) {
+             state.visit.allergies.push(key);
            }
         });
         
@@ -438,11 +439,11 @@
           existingBtn.addEventListener('click', (e) => {
              if (e.currentTarget.classList.contains('selected')) {
                e.currentTarget.classList.remove('selected');
-               state.allergies = state.allergies.filter(a => a !== key);
+               state.visit.allergies = state.visit.allergies.filter(a => a !== key);
              } else {
                clearExclusiveAllergy();
                e.currentTarget.classList.add('selected');
-               state.allergies.push(key);
+               state.visit.allergies.push(key);
              }
              saveState(state);
              checkComplete();

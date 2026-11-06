@@ -39,15 +39,6 @@
       </div>
     </div>
     
-    <!-- Arm Part Selection Overlay -->
-    <div id="arm-part-flow" class="hidden hurt-flow">
-      <div class="symptoms-grid single-select">
-        <button class="symptom-card" data-sub="arm_upper"><span class="emoji">🦾</span><span class="text" data-i18n="arm_upper">어깨·윗팔</span></button>
-        <button class="symptom-card" data-sub="arm_lower"><span class="emoji">🦾</span><span class="text" data-i18n="arm_lower">팔꿈치·아랫팔</span></button>
-        <button class="symptom-card" data-sub="arm_hand"><span class="emoji">🖐️</span><span class="text" data-i18n="arm_hand">손·손목</span></button>
-      </div>
-    </div>
-
     <!-- Leg Part Selection Overlay -->
     <div id="leg-part-flow" class="hidden hurt-flow">
       <div class="symptoms-grid single-select">
@@ -87,7 +78,7 @@
       </div>
       
             <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
-        <button id="btn-belly-done" class="btn btn-primary" style="display: none; width: 100%;">확인 ✔️</button>
+        <button id="btn-belly-done" class="btn btn-primary" style="display: none; width: 100%;" data-i18n="btn_confirm">확인 ✔️</button>
       </div>
     </div>
 
@@ -101,16 +92,8 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
-
-      // 세부 부위를 바꾸면 step2에서 쓰던 이전 부위 대기열·증상을 비움 (기기 뒤로 가기로 돌아온 경우 포함)
-      const clearCurrentPart = () => {
-        state.partsQueue = null;
-        state.currentPartObj = null;
-        state.symptoms = [];
-        state.painLevels = {};
-      };
-      
-      if (!state.part) { window.location.href = 'step1.html'; return; }
+      const cur = state.current;
+      if (!cur) { window.location.href = 'step1.html'; return; }
 
       function updateTitle(i18nKey) {
         const span = document.getElementById('title-span');
@@ -127,68 +110,56 @@
       const lang = state.lang || 'ko';
       const t = translations[lang] || translations.ko;
 
-      if (state.sideSelect && !state.sideSelected) {
-        // Step A: Arm/Leg Left/Right Selection
-        const titleKey = state.sideSelect === 'arm' ? 'side_select_arm' : 'side_select_leg';
-        updateTitle(titleKey);
+      // 세부 부위를 고르면 이번 회차 대기열·답을 비우고 새로 시작 (step2에서 돌아온 경우 포함)
+      if (cur.sub.side && !cur.sub.sideSelected) {
+        // 다리: 왼쪽/오른쪽 선택
+        updateTitle('side_select_leg');
         showFlow('side-select-flow');
-        
+
         document.querySelectorAll('[data-side]').forEach(btn => {
           btn.onclick = (e) => {
             const side = e.currentTarget.dataset.side;
-            state.sideLabel = translations.ko['side_' + side];
-            state.sideSelected = true;
+            cur.sub.sideLabel = translations.ko['side_' + side];
+            cur.sub.sideSelected = true;
             saveState(state);
             location.reload();
           };
         });
-      } else if (state.sideSelect === 'arm' && state.sideSelected) {
-        // Step B: Arm Part Selection
-        updateTitle('step_1_title');
-        showFlow('arm-part-flow');
-        document.querySelectorAll('#arm-part-flow [data-sub]').forEach(btn => {
-          btn.onclick = (e) => {
-            const subKey = e.currentTarget.dataset.sub;
-            const subLabel = translations.ko[subKey];
-            state.part = `팔·손 (${state.sideLabel} ${subLabel})`;
-            saveState(state);
-            window.location.href = 'step2.html';
-          };
-        });
-      } else if (state.sideSelect === 'leg' && state.sideSelected) {
-        // Step C: Leg Part Selection
+      } else if (cur.sub.side === 'leg' && cur.sub.sideSelected) {
+        // 다리: 세부 부위 선택
         updateTitle('step_1_title');
         showFlow('leg-part-flow');
         document.querySelectorAll('#leg-part-flow [data-sub]').forEach(btn => {
           btn.onclick = (e) => {
             const subKey = e.currentTarget.dataset.sub;
             const subLabel = translations.ko[subKey];
-            state.part = `다리·발 (${state.sideLabel} ${subLabel})`;
-            clearCurrentPart();
+            restartRound(cur);
+            cur.part = `다리·발 (${cur.sub.sideLabel} ${subLabel})`;
             saveState(state);
             window.location.href = 'step2.html';
           };
         });
-      } else if (state.part === translations.ko['part_head'] && !state.headSubSelected) {
+      } else if (cur.part === translations.ko['part_head'] && !cur.sub.headSub) {
         // Head Sub Selection
         updateTitle('part_head');
         showFlow('head-pos-flow');
         document.querySelectorAll('#head-pos-flow [data-sub]').forEach(btn => {
           btn.onclick = (e) => {
             const subKey = e.currentTarget.dataset.sub;
-            state.part = translations.ko[subKey];
-            state.headSubSelected = true;
-            clearCurrentPart();
+            restartRound(cur);
+            cur.part = translations.ko[subKey];
+            cur.sub.headSub = true;
             saveState(state);
             window.location.href = 'step2.html';
           };
         });
-      } else if (state.part === translations.ko['part_belly'] && !state.bellyPos) {
+      } else if (cur.part === translations.ko['part_belly']) {
         // Belly Canvas Logic
         updateTitle('part_belly');
         showFlow('belly-pos-flow');
-        
-        // 구역을 터치해 선택/해제 (여러 곳 선택 가능)
+
+        // 구역을 터치해 선택/해제 (여러 곳 선택 가능), 확인을 누를 때 대기열로 저장
+        let selectedQueue = null;
         const updateQueue = () => {
           // 현재 선택된 구역을 기준으로 Queue 생성
           const allActive = [];
@@ -202,22 +173,22 @@
               const count = allActive.length;
               // areas: 실제로 고른 구역 (묶어서 보여줘도 오른쪽 아래 확인용으로 남김)
               if (count === 4) {
-                 state.partsQueue = [{ id: 'belly_all', name: '복부 전체', lookupPart: '배', areas: allActive }];
+                 selectedQueue = [{ id: 'belly_all', name: '복부 전체', lookupPart: '배', areas: allActive }];
               } else if (count === 1) {
                  const r = allActive[0];
                  const lookup = r.includes('top') ? '윗배' : '아랫배';
-                 state.partsQueue = [{ id: r, name: r, lookupPart: lookup, areas: [r] }];
+                 selectedQueue = [{ id: r, name: r, lookupPart: lookup, areas: [r] }];
               } else {
                  // 2~3개
                  const topAreas = allActive.filter(r => r.includes('top'));
                  const bottomAreas = allActive.filter(r => r.includes('bottom'));
-                 state.partsQueue = [];
-                 if (topAreas.length > 0) state.partsQueue.push({ id: 'belly_top_all', name: '윗배 전체', lookupPart: '윗배', areas: topAreas });
-                 if (bottomAreas.length > 0) state.partsQueue.push({ id: 'belly_bottom_all', name: '아랫배 전체', lookupPart: '아랫배', areas: bottomAreas });
+                 selectedQueue = [];
+                 if (topAreas.length > 0) selectedQueue.push({ id: 'belly_top_all', name: '윗배 전체', lookupPart: '윗배', areas: topAreas });
+                 if (bottomAreas.length > 0) selectedQueue.push({ id: 'belly_bottom_all', name: '아랫배 전체', lookupPart: '아랫배', areas: bottomAreas });
               }
               document.getElementById('btn-belly-done').style.display = 'block';
           } else {
-              state.partsQueue = null;
+              selectedQueue = null;
               document.getElementById('btn-belly-done').style.display = 'none';
           }
         };
@@ -235,7 +206,9 @@
         });
 
         document.getElementById('btn-belly-done').onclick = () => {
-          if (state.partsQueue && state.partsQueue.length > 0) {
+          if (selectedQueue && selectedQueue.length > 0) {
+            restartRound(cur);
+            cur.queue = selectedQueue;
             saveState(state);
             window.location.href = 'step2.html';
           }
@@ -246,21 +219,22 @@
 
       // I don't know button
       document.querySelector('.btn-idk').addEventListener('click', () => {
-        if (state.part === translations.ko['part_head']) {
-          state.headSubSelected = true;
-          clearCurrentPart();
-        } else if (state.part === translations.ko['part_belly']) {
-          state.partsQueue = [{ id: 'idk', name: translations.ko['idk'], lookupPart: '배' }];
-        } else if (state.sideSelect) {
-          if (!state.sideSelected) {
-             state.sideSelected = true;
-             state.sideLabel = translations.ko['idk'];
+        if (cur.part === translations.ko['part_head']) {
+          restartRound(cur);
+          cur.sub.headSub = true;
+        } else if (cur.part === translations.ko['part_belly']) {
+          restartRound(cur);
+          cur.queue = [{ id: 'idk', name: translations.ko['idk'], lookupPart: '배' }];
+        } else if (cur.sub.side) {
+          if (!cur.sub.sideSelected) {
+             cur.sub.sideSelected = true;
+             cur.sub.sideLabel = translations.ko['idk'];
              saveState(state);
              location.reload();
              return;
           } else {
-             state.part = `${state.sideSelect === 'arm' ? '팔·손' : '다리·발'} (${state.sideLabel} ${translations.ko['idk']})`;
-             clearCurrentPart();
+             restartRound(cur);
+             cur.part = `다리·발 (${cur.sub.sideLabel} ${translations.ko['idk']})`;
           }
         }
         saveState(state);
@@ -269,9 +243,9 @@
 
       // Back Button
       document.getElementById('btn-back').addEventListener('click', () => {
-        if (state.sideSelect && state.sideSelected) {
-          state.sideSelected = false;
-          state.sideLabel = null;
+        if (cur.sub.side && cur.sub.sideSelected) {
+          cur.sub.sideSelected = false;
+          cur.sub.sideLabel = null;
           saveState(state);
           location.reload();
         } else {

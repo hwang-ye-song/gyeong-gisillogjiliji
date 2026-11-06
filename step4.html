@@ -8,7 +8,7 @@
 </head>
 <body>
   <header>
-    <button class="btn btn-secondary" onclick="window.location.href='step3.html'">
+    <button id="btn-prev4" class="btn btn-secondary">
       <span class="icon">◀</span> <span class="text" data-i18n="btn_prev">이전</span>
     </button>
     <div id="progress-bar"><div id="progress-fill" style="width: 80%;"></div><span id="progress-text">4 / 5</span></div>
@@ -60,6 +60,30 @@
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
       if (!state.records || state.records.length === 0) { window.location.href = 'step1.html'; return; }
+
+      // 머리 질문(어지럽거나 토할 것 같아요?) 답을 그 부위 기록에 저장 (step4를 떠날 때 headQ가 초기화됨)
+      state.records.forEach(r => {
+        if (r.headQ === undefined && r.partObj && r.partObj.lookupPart === '머리') {
+          const asked = r.symptoms.some(s => s === '머리를 다쳤어요' || s === '부딪혔어요');
+          r.headQ = (asked && typeof state.headQ === 'boolean') ? state.headQ : null;
+        }
+      });
+      saveState(state);
+
+      // 이전: 마지막 부위 기록을 되돌려 통증 단계(step3)부터 다시 고르게 함
+      document.getElementById('btn-prev4').addEventListener('click', () => {
+        const last = state.records.pop();
+        if (!last || !last.partObj) { window.location.href = 'step1.html'; return; }
+        // 다음(알레르기)에 갔다 온 경우 part가 비어 있음: 다시 '진행 중인 회차'로 표시해야 step1에서 같은 기록이 중복 확정되지 않음
+        if (!state.part) state.part = last.partObj.lookupPart;
+        state.partsQueue = [last.partObj, ...(state.partsQueue || [])];
+        state.currentPartObj = last.partObj;
+        state.symptoms = last.symptoms || [];
+        state.painLevels = last.painLevels || {};
+        state.headQ = (last.headQ === undefined) ? null : last.headQ;
+        saveState(state);
+        window.location.href = 'step3.html';
+      });
 
       const fContainer = document.getElementById('follow-up-container');
       const btnNext = document.getElementById('btn-next');
@@ -131,7 +155,8 @@
         if (t[partName]) translatedPart = t[partName];
         else if (t[state.records[recordIndex].partObj.id]) translatedPart = t[state.records[recordIndex].partObj.id];
         
-        const isTrauma = /다침|상처|피|멍|부러|화상|동물|벌레|삐었/.test(symptom);
+        // 다친 증상만 원인 질문 ('멍해요'는 다친 게 아니므로 제외)
+        const isTrauma = /다침|피가|코피|멍이|멍들|삐었|까졌|부딪|부었|데었|끼였/.test(symptom);
 
         let followUpHtml = '';
         if (isTrauma) {
@@ -142,6 +167,7 @@
                   <button class="symptom-card" data-trauma="trauma_friend"><span class="text" data-i18n="trauma_friend">친구랑 장난치다</span></button>
                   <button class="symptom-card" data-trauma="trauma_alone"><span class="text" data-i18n="trauma_alone">혼자 넘어짐/부딪힘</span></button>
                   <button class="symptom-card" data-trauma="trauma_sports"><span class="text" data-i18n="trauma_sports">체육시간/운동하다가</span></button>
+                  <button class="symptom-card" data-trauma="idk"><span class="text" data-i18n="idk">잘 모르겠어요</span></button>
                 </div>
               </div>
             `;
@@ -239,6 +265,29 @@
         });
       });
 
+      // 다시 들어온 경우 이미 고른 답(다친 원인, 추가 질문)을 화면에 다시 표시
+      document.querySelectorAll('.follow-up-box').forEach(box => {
+        const tc = (state.records[box.dataset.recordIndex].traumaCauses || {})[box.dataset.symptom];
+        const tKey = ['trauma_friend', 'trauma_alone', 'trauma_sports', 'idk'].find(k => translations.ko[k] === tc);
+        if (tKey) box.querySelector(`[data-trauma="${tKey}"]`).classList.add('selected');
+      });
+      const followKeys = {
+        '밥을 먹었어요?': { '네': 'belly_yes', '아니요': 'belly_no' },
+        '약을 먹었어요?': { '네': 'fever_yes', '아니요': 'fever_no' },
+        '몇 번 토했어요?': { '1번': 'vomit_1', '2번': 'vomit_2', '3번 이상': 'vomit_3' }
+      };
+      // 지금 보이는 질문의 답만 남김
+      state.followups = (state.followups || []).filter(f => {
+        const fKey = followKeys[f.q] && followKeys[f.q][f.a];
+        const fBtn = fKey && document.querySelector(`#follow-up-container > div:not(.hidden) [data-follow="${fKey}"]`);
+        if (fBtn) fBtn.classList.add('selected');
+        return !!fBtn;
+      });
+      if (needFollowUp && state.records.some(r => r.startTimes && Object.keys(r.startTimes).length > 0)) {
+        fContainer.classList.remove('hidden');
+      }
+      checkCompletion();
+
       function saveEntry() {
         if (state.part) {
           state.previousEntries.push({
@@ -267,9 +316,9 @@
 
       btnNext.addEventListener('click', () => {
         saveEntry();
-        // Reset current fields so step5 pulls from previousEntries cleanly
+        // Reset current fields (followups는 step5에서 쓰므로 유지)
         state.part = null; state.bellyPos = null; state.hurtMethod = null; state.hurtState = null;
-        state.headQ = null; state.symptoms = []; state.painLevels = {}; state.startTimes = {}; state.followups = []; state.headSubSelected = false;
+        state.headQ = null; state.symptoms = []; state.painLevels = {}; state.startTimes = {}; state.headSubSelected = false;
         state.sideSelect = null; state.sideSelected = false; state.sideLabel = null;
         saveState(state);
         window.location.href = 'step4_allergy.html';

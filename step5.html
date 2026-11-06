@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>그림 터치 문진표 - 제출 확인</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
   <style>
     .entry-summary {
       border: 2px solid var(--secondary);
@@ -74,14 +74,26 @@
 
       const container = document.getElementById('summary-container');
       
-      let allEntries = state.records.map(r => {
+      let allEntries = state.records.map((r, idx) => {
+          const bellyPos = r.partObj.name !== r.partObj.lookupPart ? r.partObj.name : null;
+          const areas = r.partObj.areas || [];
+          // 묶음 이름(윗배 전체, 왼쪽 팔 여러 부위 등)이 실제로 고른 구역과 다르면 고른 구역을 그대로 나열
+          // (복부 전체·팔 전체, 윗배/아랫배 두 칸을 다 고른 경우는 묶음 이름이 정확하므로 그대로)
+          const isFullGroup = /_all$/.test(r.partObj.id) && (r.partObj.id === 'belly_all' || /^arm_/.test(r.partObj.id) || areas.length === 2);
+          const listAreas = bellyPos && areas.length > 0 && !isFullGroup && !(areas.length === 1 && areas[0] === bellyPos);
           return {
               part: r.partObj.lookupPart,
-              bellyPos: r.partObj.name !== r.partObj.lookupPart ? r.partObj.name : null,
+              bellyPos: bellyPos,
+              // 보건실 화면·AI용 한국어 위치 이름 (bellyPos는 응급 판단에 쓰므로 그대로 둠)
+              partLabel: bellyPos ? (listAreas ? areas.map(a => translations.ko[a] || a).join(', ') : (translations.ko[bellyPos] || bellyPos)) : null,
+              areas: areas,
               symptoms: r.symptoms,
               painLevels: r.painLevels,
               startTimes: r.startTimes || {},
-              followups: state.followups || []
+              traumaCauses: r.traumaCauses || {},
+              headQ: r.headQ === undefined ? null : r.headQ,
+              // 추가 질문은 모든 부위 공통이므로 첫 번째 기록에만 저장
+              followups: idx === 0 ? (state.followups || []) : []
           };
       });
 
@@ -93,14 +105,14 @@
         let displayPartName = e.part;
         if (e.bellyPos) displayPartName = e.bellyPos;
         
-        let translatedPart = t[displayPartName] || translateKoToLang(displayPartName, state.lang) || displayPartName;
-        
+        let translatedPart = escapeHtml(t[displayPartName] || translateKoToLang(displayPartName, state.lang) || displayPartName);
+
         const symptomDetails = e.symptoms.map(s => {
            const tSym = translateKoToLang(s, state.lang);
            const pain = (e.painLevels && e.painLevels[s]) || '0';
            const timeKeyStr = e.startTimes && e.startTimes[s] ? e.startTimes[s] : "잘 모르겠어요";
            const tTime = translateKoToLang(timeKeyStr, state.lang);
-           return `${tSym} (${pain}/10, ${tTime})`;
+           return `${escapeHtml(tSym)} (${escapeHtml(pain)}/10, ${escapeHtml(tTime)})`;
         }).join('<br>');
         
         let itemsHTML = `
@@ -112,7 +124,7 @@
             const translatedQ = t[f.q] || translateKoToLang(f.q, state.lang);
             // answer might be stored as translation key e.g. 'yes', 'no'
             const translatedA = t[f.a] || translateKoToLang(f.a, state.lang) || f.a;
-            itemsHTML += `<div class="summary-item"><strong>${translatedQ}:</strong> <span>${translatedA}</span></div>`;
+            itemsHTML += `<div class="summary-item"><strong>${escapeHtml(translatedQ)}:</strong> <span>${escapeHtml(translatedA)}</span></div>`;
           });
         }
         return `<div class="entry-summary"><h3>${t.summary_symptom} ${idx + 1}</h3>${itemsHTML}</div>`;
@@ -123,7 +135,7 @@
       if (state.medications && state.medications.length > 0) {
         const lang = state.lang || 'ko';
         const t = translations[lang] || translations.ko;
-        const medLabels = state.medications.map(m => translateKoToLang(translations.ko[m] || m, state.lang)).join(', ');
+        const medLabels = state.medications.map(m => escapeHtml(translateKoToLang(translations.ko[m] || m, state.lang))).join(', ');
         container.innerHTML += `<div class="entry-summary"><h3>${t.summary_med_info || '💊 복용 중인 약'}</h3><div class="summary-item"><strong>${t.summary_med_label || '복용 약'}:</strong> <span>${medLabels}</span></div></div>`;
       }
 
@@ -132,15 +144,20 @@
         const lang = state.lang || 'ko';
         const t = translations[lang] || translations.ko;
         const allergyLabels = state.allergies.map(a => {
-           if (a.startsWith('custom_')) return a.substring(7); // "custom_새우" -> "새우"
-           return translateKoToLang(translations.ko[a] || a, state.lang);
+           if (a.startsWith('custom_')) return escapeHtml(a.substring(7)); // "custom_새우" -> "새우"
+           return escapeHtml(translateKoToLang(translations.ko[a] || a, state.lang));
         }).join(', ');
         container.innerHTML += `<div class="entry-summary"><h3>${t.summary_allergy_info}</h3><div class="summary-item"><strong>${t.summary_allergy_label}:</strong> <span>${allergyLabels}</span></div></div>`;
       }
 
       // btn-restart 이벤트 리스너 제거 완료
 
-      document.getElementById('btn-submit').addEventListener('click', () => {
+      document.getElementById('btn-submit').addEventListener('click', (e) => {
+        // 두 번 눌러 같은 기록이 중복 저장되지 않도록 한 번만 처리
+        const submitBtn = e.currentTarget;
+        if (submitBtn.disabled) return;
+        submitBtn.disabled = true;
+
         const flags = evaluateEmergency(allEntries);
         const finalEntries = allEntries;
         
@@ -153,24 +170,26 @@
         // 로컬 큐에 추가 (db.js가 백그라운드에서 처리함)
         const queue = JSON.parse(localStorage.getItem('sync_queue') || '[]');
         queue.push({
+          // 큐에서 이 기록만 골라 지우기 위한 번호 (DB 컬럼이 아니라 db.js가 보내기 전에 뺌)
+          local_id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
           lang: state.lang,
           grade: state.grade,
           class_num: state.class_num,
           student_num: state.student_num,
-          student_name: state.name,
           entries_json: finalEntries,
           emergency_flags: Array.from(flags),
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          is_resolved: false
         });
         localStorage.setItem('sync_queue', JSON.stringify(queue));
+        clearState(); // 뒤로 가기로 같은 문진표가 다시 제출되지 않도록 바로 초기화
 
         // 팝업 띄우기
         const popup = document.getElementById('success-popup');
         popup.classList.add('show');
 
-        // 1.5초 후 초기화 및 이동
+        // 1.5초 후 처음 화면으로 이동
         setTimeout(() => {
-          clearState();
           window.location.href = 'index.html';
         }, 1500);
       });

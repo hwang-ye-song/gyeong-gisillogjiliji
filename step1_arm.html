@@ -145,8 +145,9 @@
         if (allActive.length > 0) {
             const groupSide = (parts, sidePrefix, sideName) => {
                 if (parts.length === 0) return [];
+                // areas: 실제로 고른 구역 (묶어서 보여줘도 남김)
                 if (parts.length === 5) {
-                    return [{ id: `${sidePrefix}all`, name: `${sidePrefix}all`, lookupPart: '팔·손' }];
+                    return [{ id: `${sidePrefix}all`, name: `${sidePrefix}all`, lookupPart: '팔·손', areas: parts }];
                 }
                 
                 const hasUpper = parts.some(p => p.includes('_upper'));
@@ -163,7 +164,7 @@
                     if (hasWrist) lookup = '손목';
                     if (hasHand) lookup = '손';
                     // 부위가 딱 1개일 때는 '왼쪽 손목', '오른쪽 팔꿈치' 등 고유 이름을 그대로 살려줍니다.
-                    return [{ id: parts[0], name: parts[0], lookupPart: lookup }];
+                    return [{ id: parts[0], name: parts[0], lookupPart: lookup, areas: parts }];
                 }
 
                 const midCount = (hasElbow ? 1 : 0) + (hasLower ? 1 : 0);
@@ -171,13 +172,13 @@
                 
                 // 2개 이상의 부위가 선택되었을 때만 그룹화된 이름을 사용합니다.
                 if (!hasUpper && midCount > 0 && bottomCount === 0) {
-                    return [{ id: `${sidePrefix}mid`, name: `${sidePrefix}mid`, lookupPart: '팔꿈치·아랫팔' }];
+                    return [{ id: `${sidePrefix}mid`, name: `${sidePrefix}mid`, lookupPart: '팔꿈치·아랫팔', areas: parts }];
                 }
                 if (!hasUpper && midCount === 0 && bottomCount > 0) {
-                    return [{ id: `${sidePrefix}bot`, name: `${sidePrefix}bot`, lookupPart: '손·손목' }];
+                    return [{ id: `${sidePrefix}bot`, name: `${sidePrefix}bot`, lookupPart: '손·손목', areas: parts }];
                 }
                 
-                return [{ id: `${sidePrefix}multi`, name: `${sidePrefix}multi`, lookupPart: '팔·손' }];
+                return [{ id: `${sidePrefix}multi`, name: `${sidePrefix}multi`, lookupPart: '팔·손', areas: parts }];
             };
             
             const leftParts = allActive.filter(id => id.includes('arm_left_'));

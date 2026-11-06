@@ -48,7 +48,7 @@ const translations = {
       part_head: "머리", part_eye: "눈", part_ear: "귀", part_nose: "코", part_mouth: "입·이", part_neck: "목",
       part_chest: "가슴", part_belly: "배", part_arm: "팔·손", part_leg: "다리·발", part_back: "등·허리", part_skin: "피부", part_whole: "몸 전체",
       side_select_arm: "어느 쪽 팔이에요?", side_select_leg: "어느 쪽 다리예요?", side_left: "왼쪽", side_right: "오른쪽", side_both: "양쪽 다",
-      belly_top: "윗배", belly_navel: "배꼽 주변", belly_bottom: "아랫배", belly_right_bottom: "오른쪽 아래",
+      belly_top: "윗배", belly_navel: "배꼽 주변", belly_bottom: "아랫배",
       arm_upper: "어깨·윗팔", arm_lower: "팔꿈치·아랫팔", arm_hand: "손·손목",
       leg_thigh: "허벅지", leg_knee: "무릎", leg_calf: "종아리·발목", leg_foot: "발",
       hurt_how: "어떻게 다쳤어요?", hurt_state: "지금 상태는요?",
@@ -1482,10 +1482,17 @@ const translations = {
       const symptomsStr = data.symptoms.map(s => s.ko || s).join(" ");
       
       const hasTraumaCause = data.traumaCauses && Object.keys(data.traumaCauses).length > 0;
-      if (data.part === "머리" && hasTraumaCause && (data.headQ === "yes" || symptomsStr.includes("토할 것 같아요") || symptomsStr.includes("어지러워요"))) {
+      // 머리를 부딪힌 경우도 외상으로 봄, headQ는 step2에서 true/false로 저장됨
+      const headTrauma = hasTraumaCause || symptomsStr.includes("부딪혔어요");
+      if (data.part === "머리" && headTrauma && (data.headQ === true || data.headQ === "yes" || symptomsStr.includes("토할 것 같아요") || symptomsStr.includes("어지러워요"))) {
         flags.add("뇌진탕 의심");
       }
-      if ((data.part === "배" || data.part === "아랫배") && (data.bellyPos === "오른쪽 아래" || (data.bellyPos && data.bellyPos.includes("right_bottom"))) && maxPain >= 8) {
+      // 여러 구역을 골라 묶인 경우에도 실제 고른 구역(areas)으로 오른쪽 아래 확인
+      const isRightBottom = (data.areas || []).includes("belly_right_bottom") || data.bellyPos === "오른쪽 아래" || (data.bellyPos && data.bellyPos.includes("right_bottom"));
+      // 이 부위의 통증만 기준 (다른 부위 통증으로 잘못 뜨지 않게)
+      const entryPains = data.painLevels ? Object.values(data.painLevels) : [data.painLevel];
+      const entryMax = Math.max(0, ...entryPains.map(p => parseInt(p) || 0));
+      if ((data.part === "배" || data.part === "아랫배") && isRightBottom && entryMax >= 8) {
         flags.add("충수염 의심");
       }
     });
@@ -1515,6 +1522,12 @@ const translations = {
 
   function clearState() {
       sessionStorage.removeItem('medical_state');
+  }
+
+  // innerHTML에 넣는 값 이스케이프 (음성/AI로 들어온 글자 등)
+  function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
   // UI Helpers
@@ -1576,6 +1589,8 @@ const translations = {
 
   // Setup Common UI (Header, Speaker)
   document.addEventListener('DOMContentLoaded', () => {
+      // 뒤로 가기로 캐시된 화면이 복원되면 새로 읽음 (이전 상태가 다시 저장되지 않게)
+      window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
       applyLanguageToUI();
       document.querySelectorAll('.btn-speaker').forEach(btn => {
           btn.addEventListener('click', (e) => {

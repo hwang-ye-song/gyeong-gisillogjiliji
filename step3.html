@@ -46,7 +46,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
-      if (!state.part || !state.symptoms || state.symptoms.length === 0) { window.location.href = 'step1.html'; return; }
+      if (!state.currentPartObj || !state.symptoms || state.symptoms.length === 0) { window.location.href = 'step1.html'; return; }
       
       state.painLevels = state.painLevels || {};
       
@@ -103,11 +103,16 @@
       applyLanguageToUI();
 
       btnNext.addEventListener('click', () => {
+        // 두 번 눌러 빈 기록이 추가되지 않도록 한 번만 처리
+        if (btnNext.disabled || !state.currentPartObj) return;
+        btnNext.disabled = true;
+
         // Save to records
         state.records.push({
             partObj: state.currentPartObj,
             symptoms: [...state.symptoms],
-            painLevels: {...state.painLevels}
+            // 지금 선택된 증상의 통증만 저장 (해제한 증상의 통증이 남지 않게)
+            painLevels: Object.fromEntries(state.symptoms.map(s => [s, state.painLevels[s]]))
         });
         
         // Remove completed part from queue

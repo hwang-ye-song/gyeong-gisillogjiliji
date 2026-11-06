@@ -82,7 +82,7 @@
     </div>
   </section>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
   <script src="db.js"></script>
   <script src="data.js"></script>
   <script>
@@ -98,24 +98,17 @@
       // ----------------------------------------------------
       // 1. 상태 초기화 및 화면 렌더링 복구
       // ----------------------------------------------------
-      state.allergies = (state.allergies || []).filter(a => a != null);
+      state.allergies = (state.allergies || []).filter(a => typeof a === 'string');
       state.medications = state.medications || [];
 
       // 기존 선택된 알레르기/약물 버튼 UI 반영
       state.allergies.forEach(a => {
-        const btn = document.querySelector(`[data-allergy="${a}"]`);
+        const btn = document.querySelector(`[data-allergy="${CSS.escape(a)}"]`);
         if (btn) btn.classList.add('selected');
       });
       state.medications.forEach(m => {
-        const btn = document.querySelector(`[data-med="${m}"]`);
+        const btn = document.querySelector(`[data-med="${CSS.escape(m)}"]`);
         if (btn) btn.classList.add('selected');
-      });
-
-      // 이전에 음성으로 추가했던 알레르기(custom_*) 동적 생성 및 복원
-      state.allergies.filter(a => a.startsWith('custom_')).forEach(key => {
-        if (!document.querySelector(`[data-allergy="${key}"]`)) {
-          createCustomAllergyButton(key, key.substring(7));
-        }
       });
 
       // '없어요'·'잘 모르겠어요'는 다른 알레르기와 함께 고를 수 없음
@@ -213,6 +206,13 @@
       const btnVoiceRetry = document.getElementById('btn-voice-retry');
       const btnVoiceCancel = document.getElementById('btn-voice-cancel');
       const btnVoiceConfirm = document.getElementById('btn-voice-confirm');
+
+      // 이전에 음성으로 추가했던 알레르기(custom_*) 동적 생성 및 복원
+      // (btnVoice 선언 뒤, 일반 버튼 이벤트 연결 뒤에 실행해야 함)
+      state.allergies.filter(a => a.startsWith('custom_')).forEach(key => {
+        createCustomAllergyButton(key, key.substring(7));
+      });
+      checkComplete();
 
       let recognition = null;
       window.accumulatedTranscript = ""; // 전역 누적 텍스트
@@ -334,22 +334,11 @@
       async function processVoiceText(text) {
         voiceControls.classList.add('hidden');
         updateMicStatus('analyzing');
-        
-        const promptText = `너는 학생의 말을 듣고 알레르기 원인 물질을 추출 및 번역하는 의료 어시스턴트야.
-현재 학생이 사용하는 언어는 ${state.lang}야.
-[규칙]
-1. 학생의 음성 인식 결과에서 알레르기 원인 물질을 추출해.
-2. 추출된 단어를 학생이 읽을 수 있는 'native'와 보건교사가 읽을 'ko'(한국어) 두 가지 버전으로 작성해.
-3. 주의: 만약 학생의 언어(${state.lang})가 'ko'라면 'native'에도 억지로 외국어로 번역하지 말고 한국어 단어 그대로 똑같이 적어!
-4. 반드시 아래와 같은 순수 JSON 배열(Array of Objects) 형태로만 반환해! 다른 말은 절대 쓰지 마. 알레르기 원인이 없으면 빈 배열 [] 반환.
-[출력 예시]
-- 학생 언어가 'ru'일 때: [{"native": "креветки", "ko": "새우"}]
-- 학생 언어가 'ko'일 때: [{"native": "새우", "ko": "새우"}]
-학생 말: "${text}"`;
 
         try {
+          // 추출 프롬프트는 Edge Function(mode: 'allergy_extract')에서 만듦 (학생 말과 언어만 보냄)
           const { data, error } = await db.functions.invoke('generate-ai-summary', {
-            body: { promptText: promptText }
+            body: { mode: 'allergy_extract', transcript: text.slice(0, 200), lang: state.lang }
           });
           
           if (error) throw error;
@@ -357,9 +346,15 @@
           
           aiResponse = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();
           const extracted = JSON.parse(aiResponse);
-          
-          if (extracted && extracted.length > 0) {
-             showExtractedCards(extracted);
+
+          // AI 응답 검증: 문자열만, 특수문자 제거, 길이 제한
+          const clean = s => String(s === null || s === undefined ? '' : s).replace(/[<>"'`\\&\u0000-\u001F]/g, '').trim().slice(0, 30);
+          const items = (Array.isArray(extracted) ? extracted : [])
+            .map(i => ({ ko: clean(i && i.ko), native: clean(i && i.native) }))
+            .filter(i => i.ko);
+
+          if (items.length > 0) {
+             showExtractedCards(items);
           } else {
              voiceStatus.innerText = "알레르기를 찾지 못했어요 😢";
              voiceTranscript.innerText = "다시 한 번 말씀해 주시겠어요?";
@@ -385,7 +380,10 @@
            card.style.flex = '1 1 auto';
            
            const displayTxt = (item.native && item.native !== item.ko) ? `${item.native} (${item.ko})` : item.ko;
-           card.innerHTML = `<span class="text">${displayTxt}</span>`;
+           const span = document.createElement('span');
+           span.className = 'text';
+           span.textContent = displayTxt;
+           card.appendChild(span);
            
            card.addEventListener('click', () => {
              card.classList.toggle('selected');
@@ -422,12 +420,20 @@
 
       // 동적 버튼 생성 헬퍼 함수
       function createCustomAllergyButton(key, displayText) {
-        let existingBtn = document.querySelector(`[data-allergy="${key}"]`);
+        let existingBtn = document.querySelector(`[data-allergy="${CSS.escape(key)}"]`);
         if (!existingBtn) {
           existingBtn = document.createElement('button');
           existingBtn.className = 'symptom-card selected';
           existingBtn.dataset.allergy = key;
-          existingBtn.innerHTML = `<span class="emoji">✨</span><span class="text">${displayText}</span>`;
+          // 음성/AI 글자는 textContent로만 넣음
+          const emojiSpan = document.createElement('span');
+          emojiSpan.className = 'emoji';
+          emojiSpan.textContent = '✨';
+          const textSpan = document.createElement('span');
+          textSpan.className = 'text';
+          textSpan.textContent = displayText;
+          existingBtn.appendChild(emojiSpan);
+          existingBtn.appendChild(textSpan);
           
           existingBtn.addEventListener('click', (e) => {
              if (e.currentTarget.classList.contains('selected')) {

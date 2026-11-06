@@ -101,6 +101,14 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       let state = getState();
+
+      // 세부 부위를 바꾸면 step2에서 쓰던 이전 부위 대기열·증상을 비움 (기기 뒤로 가기로 돌아온 경우 포함)
+      const clearCurrentPart = () => {
+        state.partsQueue = null;
+        state.currentPartObj = null;
+        state.symptoms = [];
+        state.painLevels = {};
+      };
       
       if (!state.part) { window.location.href = 'step1.html'; return; }
 
@@ -156,6 +164,7 @@
             const subKey = e.currentTarget.dataset.sub;
             const subLabel = translations.ko[subKey];
             state.part = `다리·발 (${state.sideLabel} ${subLabel})`;
+            clearCurrentPart();
             saveState(state);
             window.location.href = 'step2.html';
           };
@@ -169,6 +178,7 @@
             const subKey = e.currentTarget.dataset.sub;
             state.part = translations.ko[subKey];
             state.headSubSelected = true;
+            clearCurrentPart();
             saveState(state);
             window.location.href = 'step2.html';
           };
@@ -190,19 +200,20 @@
 
           if (allActive.length > 0) {
               const count = allActive.length;
+              // areas: 실제로 고른 구역 (묶어서 보여줘도 오른쪽 아래 확인용으로 남김)
               if (count === 4) {
-                 state.partsQueue = [{ id: 'belly_all', name: '복부 전체', lookupPart: '배' }];
+                 state.partsQueue = [{ id: 'belly_all', name: '복부 전체', lookupPart: '배', areas: allActive }];
               } else if (count === 1) {
                  const r = allActive[0];
                  const lookup = r.includes('top') ? '윗배' : '아랫배';
-                 state.partsQueue = [{ id: r, name: r, lookupPart: lookup }];
+                 state.partsQueue = [{ id: r, name: r, lookupPart: lookup, areas: [r] }];
               } else {
                  // 2~3개
-                 const hasTop = allActive.some(r => r.includes('top'));
-                 const hasBottom = allActive.some(r => r.includes('bottom'));
+                 const topAreas = allActive.filter(r => r.includes('top'));
+                 const bottomAreas = allActive.filter(r => r.includes('bottom'));
                  state.partsQueue = [];
-                 if (hasTop) state.partsQueue.push({ id: 'belly_top_all', name: '윗배 전체', lookupPart: '윗배' });
-                 if (hasBottom) state.partsQueue.push({ id: 'belly_bottom_all', name: '아랫배 전체', lookupPart: '아랫배' });
+                 if (topAreas.length > 0) state.partsQueue.push({ id: 'belly_top_all', name: '윗배 전체', lookupPart: '윗배', areas: topAreas });
+                 if (bottomAreas.length > 0) state.partsQueue.push({ id: 'belly_bottom_all', name: '아랫배 전체', lookupPart: '아랫배', areas: bottomAreas });
               }
               document.getElementById('btn-belly-done').style.display = 'block';
           } else {
@@ -237,6 +248,7 @@
       document.querySelector('.btn-idk').addEventListener('click', () => {
         if (state.part === translations.ko['part_head']) {
           state.headSubSelected = true;
+          clearCurrentPart();
         } else if (state.part === translations.ko['part_belly']) {
           state.partsQueue = [{ id: 'idk', name: translations.ko['idk'], lookupPart: '배' }];
         } else if (state.sideSelect) {
@@ -248,6 +260,7 @@
              return;
           } else {
              state.part = `${state.sideSelect === 'arm' ? '팔·손' : '다리·발'} (${state.sideLabel} ${translations.ko['idk']})`;
+             clearCurrentPart();
           }
         }
         saveState(state);

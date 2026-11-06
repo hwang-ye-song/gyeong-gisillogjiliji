@@ -191,6 +191,7 @@
             updateTitle('head_q');
             showFlow('head-q-flow');
           } else {
+            saveState(state);
             window.location.href = 'step3.html';
           }
         };
@@ -242,18 +243,29 @@
           showFlow('symptoms-container');
           updateTitle('step_2_title');
         } else {
+          // 부위를 다시 고를 수 있도록 이번 회차 임시 상태를 비움 (이전 큐가 그대로 쓰이지 않게)
+          const resetCurrentPart = () => {
+              state.partsQueue = null;
+              state.currentPartObj = null;
+              state.symptoms = [];
+              state.painLevels = {};
+              // 배·팔 두 번째 묶음에서 돌아온 경우 이번 회차에 먼저 저장된 기록도 버림
+              state.records = (state.records || []).slice(0, state.committedRecords || 0);
+          };
           // Check if we came from step1_sub (i.e. we have sub-divisions)
-          if (state.sideSelect || state.headSubSelected || state.bellyPos || state.part === '가슴' || state.part === '등') {
+          if (state.sideSelect || state.headSubSelected) {
               if (state.headSubSelected) {
                   state.headSubSelected = false;
                   state.part = '머리';
               }
-              if (state.bellyPos || state.part === '가슴' || state.part === '등') {
-                  state.bellyPos = null;
-                  state.part = '몸통';
-              }
+              resetCurrentPart();
               saveState(state);
               window.location.href = 'step1_sub.html';
+          } else if (state.part === translations.ko['part_belly'] || state.part === translations.ko['part_arm']) {
+              // 배·팔은 구역 선택 화면으로
+              resetCurrentPart();
+              saveState(state);
+              window.location.href = state.part === translations.ko['part_arm'] ? 'step1_arm.html' : 'step1_sub.html';
           } else {
               window.location.href = 'step1.html';
           }
